@@ -1,4 +1,4 @@
-package com.example.al_falah_app
+package com.ppkd.alfalah
 
 import io.flutter.embedding.android.FlutterActivity
 
