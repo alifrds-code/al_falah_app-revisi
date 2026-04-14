@@ -1,9 +1,13 @@
+import 'package:al_falah_app/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/view/auth/splash_screen.dart';
-import 'package:al_falah_app/utils/app_colors.dart';
+// import 'package:al_falah_app/view/auth/splash_screen.dart';
+// import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/view/auth/layar_login.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 

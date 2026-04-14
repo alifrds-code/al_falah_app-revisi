@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "848984812515",
+    "project_id": "falah-02",
+    "storage_bucket": "falah-02.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:848984812515:android:a42e9265ba894753ad0ed6",
+        "android_client_info": {
+          "package_name": "com.ppkd.alfalah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVdnqYxqf6XXFz5fJvGNTMec23GNaoKf0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
