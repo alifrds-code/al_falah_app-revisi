@@ -1,12 +1,27 @@
 import 'package:al_falah_app/database/sqflite_helper.dart';
 import 'package:al_falah_app/models/model_kelas.dart';
+import 'package:al_falah_app/services/firebase_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 class KelasController {
   // CREATE: Tambah Kelas Baru (Cuma nama kelasnya aja, asistennya belakangan)
   static Future<void> tambahKelas(KelasModel kelas) async {
     final dbs = await DBHelper.db();
-    await dbs.insert('tb_kelas', kelas.toMap());
+    final idKelas = await dbs.insert('tb_kelas', kelas.toMap());
+
+    await _sinkronKelasKeFirebase(
+      idKelas: idKelas,
+      namaKelas: kelas.namaKelas,
+      idAsisten: kelas.idAsisten,
+    );
+
+    if (kelas.idAsisten != null) {
+      await _sinkronAsistenKelasKeFirebase(
+        idKelas: idKelas,
+        idUser: kelas.idAsisten,
+      );
+    }
+
     print("Berhasil buat kelas: ${kelas.namaKelas}");
   }
 
@@ -60,7 +75,7 @@ class KelasController {
           'id_kelas': kelas.idKelas,
           'id_user': kelas.idAsisten,
         });
-        print("Ustadz baru berhasil di-assign ke kelas!");
+        print('Ustadz baru berhasil di-assign ke kelas!');
       } else {
         // Kalau udah ada ustadznya sebelumnya, kita UPDATE (ganti ustadz)
         await dbs.update(
@@ -69,8 +84,13 @@ class KelasController {
           where: 'id_kelas = ?',
           whereArgs: [kelas.idKelas],
         );
-        print("Ustadz pengajar berhasil diganti!");
+        print('Ustadz pengajar berhasil diganti!');
       }
+
+      await _sinkronAsistenKelasKeFirebase(
+        idKelas: kelas.idKelas!,
+        idUser: kelas.idAsisten,
+      );
     } else {
       // Kalau idAsisten nya null, berarti kita copot aja ustadznya dari kelas ini tanpa harus hapus kelasnya. Jadi kita DELETE penugasan di tb_asisten_kelas.
       await dbs.delete(
@@ -78,14 +98,33 @@ class KelasController {
         where: 'id_kelas = ?',
         whereArgs: [kelas.idKelas],
       );
-      print("Ustadz pengajar berhasil dikosongkan dari kelas!");
+      print('Ustadz pengajar berhasil dikosongkan dari kelas!');
+
+      await _hapusAsistenKelasFirebase(kelas.idKelas!);
     }
+
+    await _sinkronKelasKeFirebase(
+      idKelas: kelas.idKelas!,
+      namaKelas: kelas.namaKelas,
+      idAsisten: kelas.idAsisten,
+    );
   }
 
   // DELETE: Hapus Kelas (tb_asisten_kelas otomatis kehapus karena ON DELETE CASCADE lu)
   static Future<int> hapusKelas(int idKelas) async {
     final dbs = await DBHelper.db();
-    return dbs.delete('tb_kelas', where: 'id_kelas = ?', whereArgs: [idKelas]);
+    final result = await dbs.delete(
+      'tb_kelas',
+      where: 'id_kelas = ?',
+      whereArgs: [idKelas],
+    );
+
+    if (result > 0) {
+      await _hapusKelasFirebase(idKelas);
+      await _hapusAsistenKelasFirebase(idKelas);
+    }
+
+    return result;
   }
 
   // FUNGSI BARU: Copot Asisten dari Kelas
@@ -96,6 +135,18 @@ class KelasController {
       where: 'id_kelas = ?',
       whereArgs: [idKelas],
     );
+
+    await _hapusAsistenKelasFirebase(idKelas);
+
+    try {
+      await FirebaseService.sinkronDokumen(
+        collection: FirebaseService.koleksiSyncKelas,
+        documentId: 'kelas_$idKelas',
+        data: {'id_asisten': null},
+      );
+    } catch (e) {
+      print('Sinkron copot asisten ke Firebase gagal (diabaikan): $e');
+    }
   }
 
   // FUNGSI BARU: Hitung Total Kelas buat Dashboard
@@ -120,5 +171,67 @@ class KelasController {
     ''';
 
     return await dbs.rawQuery(sql, [idUserAsisten]);
+  }
+
+  static Future<void> _sinkronKelasKeFirebase({
+    required int idKelas,
+    required String namaKelas,
+    int? idAsisten,
+  }) async {
+    try {
+      await FirebaseService.sinkronDokumen(
+        collection: FirebaseService.koleksiSyncKelas,
+        documentId: 'kelas_$idKelas',
+        data: {
+          'id_kelas': idKelas,
+          'nama_kelas': namaKelas,
+          'id_asisten': idAsisten,
+        },
+      );
+    } catch (e) {
+      print('Sinkron kelas ke Firebase gagal (diabaikan): $e');
+    }
+  }
+
+  static Future<void> _sinkronAsistenKelasKeFirebase({
+    required int idKelas,
+    required int? idUser,
+  }) async {
+    if (idUser == null) return;
+
+    try {
+      await FirebaseService.sinkronDokumen(
+        collection: FirebaseService.koleksiSyncAsistenKelas,
+        documentId: 'asisten_kelas_$idKelas',
+        data: {
+          'id_kelas': idKelas,
+          'id_user': idUser,
+        },
+      );
+    } catch (e) {
+      print('Sinkron asisten_kelas ke Firebase gagal (diabaikan): $e');
+    }
+  }
+
+  static Future<void> _hapusKelasFirebase(int idKelas) async {
+    try {
+      await FirebaseService.hapusDokumen(
+        collection: FirebaseService.koleksiSyncKelas,
+        documentId: 'kelas_$idKelas',
+      );
+    } catch (e) {
+      print('Hapus kelas di Firebase gagal (diabaikan): $e');
+    }
+  }
+
+  static Future<void> _hapusAsistenKelasFirebase(int idKelas) async {
+    try {
+      await FirebaseService.hapusDokumen(
+        collection: FirebaseService.koleksiSyncAsistenKelas,
+        documentId: 'asisten_kelas_$idKelas',
+      );
+    } catch (e) {
+      print('Hapus asisten_kelas di Firebase gagal (diabaikan): $e');
+    }
   }
 }

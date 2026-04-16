@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/jamaah_controller.dart';
+import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
+import 'package:al_falah_app/models/model_jamaah.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/view/admin/form_jamaah.dart';
 
@@ -11,13 +12,9 @@ class KelolaJamaah extends StatefulWidget {
 }
 
 class _KelolaJamaahState extends State<KelolaJamaah> {
-  Future<List<Map<String, dynamic>>> _loadDataJamaah() async {
-    return await JamaahController.getSemuaJamaah();
-  }
-
   // FUNGSI: Pop-up Detail Jamaah
-  void _tampilDetailJamaah(BuildContext context, Map<String, dynamic> jamaah) {
-    bool isLaki = jamaah['jenis_kelamin'] == 'Laki-laki';
+  void _tampilDetailJamaah(BuildContext context, JamaahModel jamaah) {
+    bool isLaki = jamaah.jenisKelamin == 'Laki-laki';
 
     showModalBottomSheet(
       context: context,
@@ -57,7 +54,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
               ),
               const SizedBox(height: 16),
               Text(
-                jamaah['nama_lengkap'],
+                jamaah.namaLengkap,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -76,7 +73,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Kelas: ${jamaah['nama_kelas'] ?? 'Belum ada kelas'}',
+                  'Kelas: ${jamaah.idKelas ?? 'Belum ada kelas'}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -99,16 +96,16 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                     _buildInfoRow(
                       Icons.wc,
                       'Jenis Kelamin',
-                      jamaah['jenis_kelamin'],
+                      jamaah.jenisKelamin,
                     ),
                     const Divider(height: 24, color: AppColors.borderLight),
                     _buildInfoRow(
                       Icons.phone,
                       'Nomor WhatsApp',
-                      jamaah['no_hp'] ?? 'Tidak ada data',
+                      jamaah.noHp ?? 'Tidak ada data',
                     ),
                     const Divider(height: 24, color: AppColors.borderLight),
-                    _buildInfoRow(Icons.home, 'Alamat', jamaah['alamat']),
+                    _buildInfoRow(Icons.home, 'Alamat', jamaah.alamat),
                   ],
                 ),
               ),
@@ -172,7 +169,8 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
   }
 
   // FUNGSI: Konfirmasi Hapus
-  void _konfirmasiHapus(BuildContext context, Map<String, dynamic> jamaah) {
+  void _konfirmasiHapus(BuildContext context, String? idJamaah, String nama) {
+    if (idJamaah == null) return;
     showDialog(
       context: context,
       builder: (context) {
@@ -189,7 +187,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
             ),
           ),
           content: Text(
-            'Hapus ${jamaah['nama_lengkap']} dari daftar?',
+            'Hapus $nama dari daftar?',
             style: const TextStyle(color: AppColors.textBody, fontSize: 14),
           ),
           actions: [
@@ -212,17 +210,17 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
               ),
               onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await JamaahController.hapusJamaah(jamaah['id_jamaah']);
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
+              Navigator.pop(context);
+              try {
+                await AdminControllerFirebase.hapusJamaah(idJamaah);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+
                     const SnackBar(
                       content: Text('Jamaah berhasil dihapus!'),
                       backgroundColor: AppColors.primary,
                     ),
                   );
-                  setState(() {});
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -252,7 +250,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Data Jamaah',
+          'Data Jamaah (Real-time)',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,
@@ -276,7 +274,6 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
             context,
             MaterialPageRoute(builder: (context) => const FormJamaah()),
           );
-          setState(() {});
         },
       ),
       body: Column(
@@ -304,8 +301,8 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
           ),
 
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _loadDataJamaah(),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: AdminControllerFirebase.ambilSemuaJamaahStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting)
                   return const Center(
@@ -353,7 +350,20 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                         ],
                       ),
                       child: ListTile(
-                        onTap: () => _tampilDetailJamaah(context, jamaah),
+                        onTap: () {
+                          // Manual mapping to avoid model integer errors with string IDs
+                          final model = JamaahModel(
+                            namaLengkap: jamaah['nama_lengkap'] ?? '',
+                            jenisKelamin: jamaah['jenis_kelamin'] ?? 'Laki-laki',
+                            alamat: jamaah['alamat'] ?? '',
+                            noHp: jamaah['no_hp'],
+                            statusJamaah: jamaah['status_jamaah'] is int 
+                                ? jamaah['status_jamaah'] 
+                                : int.tryParse(jamaah['status_jamaah']?.toString() ?? '1') ?? 1,
+                            idKelas: null, // Skip idKelas for detail modal if it's string
+                          );
+                          _tampilDetailJamaah(context, model);
+                        },
                         contentPadding: const EdgeInsets.all(16),
                         leading: Container(
                           padding: const EdgeInsets.all(10),
@@ -367,7 +377,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                           ),
                         ),
                         title: Text(
-                          jamaah['nama_lengkap'],
+                          jamaah['nama_lengkap'] ?? 'Tanpa Nama',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -388,7 +398,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
-                                  jamaah['nama_kelas'] ?? 'Belum ada kelas',
+                                  jamaah['id_kelas'] ?? 'Belum ada kelas',
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -423,7 +433,6 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                                           FormJamaah(jamaahLama: jamaah),
                                     ),
                                   );
-                                  setState(() {});
                                 },
                               ),
                             ),
@@ -441,8 +450,11 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                                 ),
                                 constraints: const BoxConstraints(),
                                 padding: const EdgeInsets.all(8),
-                                onPressed: () =>
-                                    _konfirmasiHapus(context, jamaah),
+                                onPressed: () => _konfirmasiHapus(
+                                  context,
+                                  jamaah['id'],
+                                  jamaah['nama_lengkap'] ?? '',
+                                ),
                               ),
                             ),
                           ],

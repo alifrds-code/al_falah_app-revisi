@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/admin_controller.dart';
+import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
 import 'package:al_falah_app/models/model_user.dart';
 
 // IMPORT GUDANG DESAIN KITA
@@ -14,11 +14,6 @@ class KelolaAsisten extends StatefulWidget {
 }
 
 class _KelolaAsistenState extends State<KelolaAsisten> {
-  // Fungsi narik data asisten dari controller
-  Future<List<UserModel>> _loadDataAsisten() async {
-    return await AdminController.getSemuaAsisten();
-  }
-
   // FUNGSI 1: Nampilin Pop-up Detail Asisten dari bawah
   void _tampilDetailAsisten(BuildContext context, UserModel asisten) {
     showModalBottomSheet(
@@ -200,20 +195,18 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                 Navigator.pop(context); // Tutup dialognya dulu
 
                 try {
-                  // Panggil otak logika lu buat hapus di SQLite
-                  // Kasih tanda seru (!) karena kita yakin ID-nya pasti ada
-                  await AdminController.hapusAsisten(asisten.idUser!);
-
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Data berhasil dihapus!'),
-                      backgroundColor: AppColors.primary, // Ijo tanda sukses
-                    ),
-                  );
-
-                  // Refresh UI biar kartunya langsung hilang dari layar
-                  setState(() {});
+                  // Panggil otak logika lu buat hapus (Firebase)
+                  if (asisten.uid != null) {
+                    await AdminControllerFirebase.hapusAsisten(asisten.uid!);
+                    
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Data berhasil dihapus!'),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -243,7 +236,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Data Asisten',
+          'Data Asisten (Real-time)',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,
@@ -267,7 +260,6 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
             context,
             MaterialPageRoute(builder: (context) => const FormAsisten()),
           );
-          setState(() {});
         },
       ),
       body: Column(
@@ -298,8 +290,8 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<UserModel>>(
-              future: _loadDataAsisten(),
+            child: StreamBuilder<List<UserModel>>(
+              stream: AdminControllerFirebase.ambilSemuaAsistenStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -412,7 +404,6 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                                 constraints: const BoxConstraints(),
                                 padding: const EdgeInsets.all(8),
                                 onPressed: () async {
-                                  // KITA PANGGIL FORM PINTARNYA, TERUS LEMPAR DATA USTADZ LAMA!
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -420,16 +411,10 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                                           FormAsisten(asistenLama: asisten),
                                     ),
                                   );
-
-                                  // Refresh layar kalau udah beres edit
-                                  setState(() {});
                                 },
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // ========================================================
-                            // TOMBOL HAPUS (Panggil fungsi _konfirmasiHapus)
-                            // ========================================================
                             Container(
                               decoration: BoxDecoration(
                                 color: AppColors.dangerLight,
@@ -444,7 +429,6 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                                 constraints: const BoxConstraints(),
                                 padding: const EdgeInsets.all(8),
                                 onPressed: () {
-                                  // Panggil pop-up konfirmasinya ke sini
                                   _konfirmasiHapus(context, asisten);
                                 },
                               ),

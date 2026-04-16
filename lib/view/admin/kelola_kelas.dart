@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/kelas_controller.dart';
+import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
+import 'package:al_falah_app/models/model_kelas.dart';
 import 'package:al_falah_app/view/admin/detail_kelas.dart';
 
 import 'package:al_falah_app/utils/app_colors.dart';
@@ -13,11 +14,6 @@ class KelolaKelas extends StatefulWidget {
 }
 
 class _KelolaKelasState extends State<KelolaKelas> {
-  // Fungsi untuk narik data dari controller
-  Future<List<Map<String, dynamic>>> _loadDataKelas() async {
-    return await KelasController.getDaftarKelasLengkap();
-  }
-
   // FUNGSI 2: Pop-up Konfirmasi Hapus Kelas
   void _konfirmasiHapus(BuildContext context, Map<String, dynamic> kelas) {
     showDialog(
@@ -61,8 +57,8 @@ class _KelolaKelasState extends State<KelolaKelas> {
               onPressed: () async {
                 Navigator.pop(context); // Tutup dialognya dulu
                 try {
-                  // Panggil fungsi hapus dari controller
-                  await KelasController.hapusKelas(kelas['id_kelas']);
+                  // Panggil fungsi hapus dari controller (Firebase)
+                  await AdminControllerFirebase.hapusKelas(kelas['id']);
 
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -71,9 +67,6 @@ class _KelolaKelasState extends State<KelolaKelas> {
                       backgroundColor: AppColors.primary,
                     ),
                   );
-
-                  // Refresh layar biar kartunya hilang
-                  setState(() {});
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -103,7 +96,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Kelola Kelas',
+          'Kelola Kelas (Real-time)',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,
@@ -128,7 +121,6 @@ class _KelolaKelasState extends State<KelolaKelas> {
             context,
             MaterialPageRoute(builder: (context) => const FormKelas()),
           );
-          setState(() {}); // Refresh setelah balik
         },
       ),
       body: Column(
@@ -160,10 +152,10 @@ class _KelolaKelasState extends State<KelolaKelas> {
             ),
           ),
 
-          // LIST DATA KELAS
+          // LIST DATA KELAS DENGAN STREAM BUILDER
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _loadDataKelas(),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: AdminControllerFirebase.ambilSemuaKelasStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -197,7 +189,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
                   itemBuilder: (context, index) {
                     final kelas = daftarKelas[index];
                     String namaAsisten =
-                        kelas['nama_asisten'] ?? "Belum ada asisten";
+                        kelas['nama_asisten'] ?? "Cek di detail";
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -224,7 +216,6 @@ class _KelolaKelasState extends State<KelolaKelas> {
                               builder: (context) => DetailKelas(kelas: kelas),
                             ),
                           );
-                          setState(() {});
                         },
                         contentPadding: const EdgeInsets.all(16),
                         leading: Container(
@@ -239,7 +230,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
                           ),
                         ),
                         title: Text(
-                          kelas['nama_kelas'],
+                          kelas['nama_kelas'] ?? 'Tanpa Nama',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -256,20 +247,15 @@ class _KelolaKelasState extends State<KelolaKelas> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  // Warnanya beda kalau asisten belum diassign
-                                  color: kelas['nama_asisten'] != null
-                                      ? AppColors.primaryLight
-                                      : AppColors.dangerLight,
+                                  color: AppColors.primaryLight,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   namaAsisten,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: kelas['nama_asisten'] != null
-                                        ? AppColors.primaryDark
-                                        : AppColors.danger,
+                                    color: AppColors.primaryDark,
                                   ),
                                 ),
                               ),
@@ -298,11 +284,15 @@ class _KelolaKelasState extends State<KelolaKelas> {
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          FormKelas(kelasLama: kelas),
+                                      builder: (context) => FormKelas(
+                                        kelasLama: {
+                                          ...kelas,
+                                          'id_kelas':
+                                              kelas['id'], // Map id to id_kelas
+                                        },
+                                      ),
                                     ),
                                   );
-                                  setState(() {});
                                 },
                               ),
                             ),
