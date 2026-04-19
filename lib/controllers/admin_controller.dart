@@ -1,73 +1,131 @@
-import 'package:al_falah_app/database/sqflite_helper.dart';
-import 'package:al_falah_app/models/model_user.dart';
-import 'package:sqflite/sqflite.dart';
+import '../database/sqflite_helper.dart';
+import '../models/model_user.dart';
+import '../models/model_kelas.dart';
+import '../models/model_jamaah.dart';
+import '../models/model_pengumuman.dart';
+import '../models/model_acara.dart';
 
+// Otak logika khusus Admin: CRUD semua data
 class AdminController {
-  // CREATE (Tambah Akun Asisten Baru)
+  // ============================================================
+  //  DASHBOARD STATISTIK
+  // ============================================================
 
-  static Future<void> tambahAsisten(UserModel asisten) async {
-    final dbs = await DBHelper.db();
+  // Ambil angka statistik untuk ditampilkan di dashboard
+  Future<Map<String, int>> getDashboardStats() async {
+    final jamaah = await DBHelper.getAllJamaah();
+    final kelas = await DBHelper.getAllKelas();
+    final asisten = await DBHelper.getAllAsistens();
 
-    await dbs.insert('tb_users', asisten.toMap());
-    print("Berhasil tambah asisten: ${asisten.toMap()}");
+    return {
+      'jamaah': jamaah.length,
+      'kelas': kelas.length,
+      'asisten': asisten.length,
+    };
   }
 
-  // READ (Tampilkan Semua Asisten)
-  static Future<List<UserModel>> getSemuaAsisten() async {
-    final dbs = await DBHelper.db();
+  // ============================================================
+  //  KELOLA ASISTEN
+  // ============================================================
 
-    // filter where role = 'asisten'
-    // agar Admin tidak ikut muncul di tampilan
-    final List<Map<String, dynamic>> results = await dbs.query(
-      "tb_users",
-      where: "role = ?",
-      whereArgs: ['asisten'],
-    );
-
-    print("Data asisten ditarik: ${results.length} orang");
-    return results.map((e) => UserModel.fromMap(e)).toList();
+  Future<List<UserModel>> getAsistens() async {
+    final data = await DBHelper.getAllAsistens();
+    return data.map((e) => UserModel.fromMap(e)).toList();
   }
 
-  // UPDATE (Edit Data Asisten)
-  static Future<int> updateAsisten(UserModel asisten) async {
-    final dbs = await DBHelper.db();
-
-    if (asisten.idUser == null) {
-      throw Exception("ID Wajib ada untuk edit data!");
-    }
-
-    int result = await dbs.update(
-      'tb_users',
-      asisten.toMap(),
-      where: 'id_user = ?',
-      whereArgs: [asisten.idUser],
-    );
-
-    print("Asisten ID ${asisten.idUser} berhasil diupdate");
-    return result;
+  Future<void> addAsisten(UserModel user) async {
+    await DBHelper.insertUser(user.toMap());
   }
 
-  // DELETE (Hapus Akun Asisten)
-
-  static Future<int> hapusAsisten(int idUser) async {
-    final dbs = await DBHelper.db();
-
-    int result = await dbs.delete(
-      'tb_users',
-      where: 'id_user = ? AND role = ?',
-      whereArgs: [idUser, 'asisten'],
-    );
-
-    print("Asisten ID $idUser berhasil dihapus");
-    return result;
+  Future<void> updateAsisten(UserModel user) async {
+    await DBHelper.updateUser(user.idUser!, user.toMap());
   }
 
-  // FUNGSI BARU: Hitung Total Asisten buat Dashboard
-  static Future<int> getHitungTotalAsisten() async {
-    final dbs = await DBHelper.db();
-    final result = await dbs.rawQuery(
-      "SELECT COUNT(*) FROM tb_users WHERE role = 'asisten'",
-    );
-    return Sqflite.firstIntValue(result) ?? 0;
+  Future<void> deleteAsisten(int id) async {
+    await DBHelper.deleteAsisten(id);
+  }
+
+  // ============================================================
+  //  KELOLA KELAS
+  // ============================================================
+
+  Future<List<KelasModel>> getClasses() async {
+    final data = await DBHelper.getAllKelas();
+    return data.map((e) => KelasModel.fromMap(e)).toList();
+  }
+
+  Future<void> addClass(String name) async {
+    await DBHelper.insertKelas(name);
+  }
+
+  Future<void> updateClass(int id, String name) async {
+    await DBHelper.updateKelas(id, name);
+  }
+
+  Future<void> deleteClass(int id) async {
+    await DBHelper.deleteKelas(id);
+  }
+
+  // ============================================================
+  //  KELOLA JAMAAH
+  // ============================================================
+
+  Future<List<JamaahModel>> getJamaah() async {
+    final data = await DBHelper.getAllJamaah();
+    return data.map((e) => JamaahModel.fromMap(e)).toList();
+  }
+
+  Future<void> addJamaah(JamaahModel jamaah) async {
+    await DBHelper.insertJamaah(jamaah.toMap());
+  }
+
+  Future<void> updateJamaah(JamaahModel jamaah) async {
+    await DBHelper.updateJamaah(jamaah.idJamaah!, jamaah.toMap());
+  }
+
+  Future<void> deleteJamaah(int id) async {
+    await DBHelper.deleteJamaah(id);
+  }
+
+  // ============================================================
+  //  KELOLA PENGUMUMAN
+  // ============================================================
+
+  Future<List<PengumumanModel>> getPengumuman() async {
+    final data = await DBHelper.getAllPengumuman();
+    return data.map((e) => PengumumanModel.fromMap(e)).toList();
+  }
+
+  Future<void> postAnnouncement(String title, String content) async {
+    await DBHelper.insertPengumuman(title, content);
+  }
+
+  Future<void> updateAnnouncement(int id, String title, String content) async {
+    await DBHelper.updatePengumuman(id, title, content);
+  }
+
+  Future<void> deleteAnnouncement(int id) async {
+    await DBHelper.deletePengumuman(id);
+  }
+
+  // ============================================================
+  //  KELOLA ACARA
+  // ============================================================
+
+  Future<List<AcaraModel>> getAcara() async {
+    final data = await DBHelper.getAllAcara();
+    return data.map((e) => AcaraModel.fromMap(e)).toList();
+  }
+
+  Future<void> postEvent(AcaraModel event) async {
+    await DBHelper.insertAcara(event.toMap());
+  }
+
+  Future<void> updateEvent(AcaraModel event) async {
+    await DBHelper.updateAcara(event.idAcara!, event.toMap());
+  }
+
+  Future<void> deleteEvent(int id) async {
+    await DBHelper.deleteAcara(id);
   }
 }

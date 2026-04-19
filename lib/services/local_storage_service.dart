@@ -1,47 +1,52 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/model_user.dart';
 
-class PreferenceHandler {
-  static final PreferenceHandler _instance = PreferenceHandler._internal();
-  late SharedPreferences _preferences;
+class LocalStorageService {
+  static const String _keyUser = 'auth_user';
+  static const String _keyIsFirstTime = 'is_first_time';
+  static const String _keySelectedClasses = 'selected_class_ids';
 
-  factory PreferenceHandler() => _instance;
-  PreferenceHandler._internal();
-
-  Future<void> init() async {
-    _preferences = await SharedPreferences.getInstance();
+  // --- Session Management ---
+  static Future<void> saveUser(UserModel user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUser, jsonEncode(user.toMap()));
   }
 
-  // Key untuk nyimpen data
-  static const String _isLogin = 'isLogin';
-  static const String _idUser = 'idUser';
-  static const String _role = 'role'; // 'admin' atau 'asisten'
-
-  // CREATE / UPDATE: Simpan Sesi Pas Login Sukses
-  Future<void> saveUserSession(bool isLogin, int idUser, String role) async {
-    await _preferences.setBool(_isLogin, isLogin);
-    await _preferences.setInt(_idUser, idUser);
-    await _preferences.setString(_role, role);
+  static Future<UserModel?> getUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString(_keyUser);
+    if (userStr != null) {
+      return UserModel.fromMap(jsonDecode(userStr));
+    }
+    return null;
   }
 
-  // GET: Ambil Status Login
-  Future<bool?> getIsLogin() async {
-    return _preferences.getBool(_isLogin);
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUser);
   }
 
-  // GET: Ambil ID User (Buat asisten pas mau bikin jadwal/absen)
-  Future<int?> getIdUser() async {
-    return _preferences.getInt(_idUser);
+  // --- Onboarding Management ---
+  static Future<bool> isFirstTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyIsFirstTime) ?? true;
   }
 
-  // GET: Ambil Role (Buat nentuin arah ke Beranda Admin / Asisten)
-  Future<String?> getRole() async {
-    return _preferences.getString(_role);
+  static Future<void> setNotFirstTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyIsFirstTime, false);
   }
 
-  // DELETE: Hapus Sesi Pas Logout
-  Future<void> logout() async {
-    await _preferences.remove(_isLogin);
-    await _preferences.remove(_idUser);
-    await _preferences.remove(_role);
+  // --- Jamaah Preferences ---
+  static Future<void> saveSelectedClasses(List<int> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keySelectedClasses, ids.map((e) => e.toString()).toList());
+  }
+
+  static Future<List<int>> getSelectedClasses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_keySelectedClasses) ?? [];
+    return list.map((e) => int.parse(e)).toList();
   }
 }

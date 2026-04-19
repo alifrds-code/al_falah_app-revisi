@@ -1,7 +1,6 @@
 class AppFonts {
-  static double title = 22;
-
-  static double subtitle = 16;
-
-  static double body = 14;
+  static const double title = 24.0;
+  static const double subtitle = 18.0;
+  static const double body = 14.0;
+  static const double small = 12.0;
 }

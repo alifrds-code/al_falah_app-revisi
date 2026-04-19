@@ -1,12 +1,11 @@
-import 'dart:convert';
-
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+// Cetakan data pengguna (Admin & Asisten)
 class UserModel {
   final int? idUser;
   final String nama;
   final String email;
   final String password;
-  final String role;
+  final String role; // 'admin' atau 'asisten'
+
   UserModel({
     this.idUser,
     required this.nama,
@@ -15,16 +14,7 @@ class UserModel {
     required this.role,
   });
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id_user': idUser,
-      'nama': nama,
-      'email': email,
-      'password': password,
-      'role': role,
-    };
-  }
-
+  // Membuat UserModel dari data Map (dari database)
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       idUser: map['id_user'],
@@ -35,8 +25,14 @@ class UserModel {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory UserModel.fromJson(String source) =>
-      UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  // Mengubah UserModel kembali jadi Map (untuk disimpan ke database)
+  Map<String, dynamic> toMap() {
+    return {
+      'id_user': idUser,
+      'nama': nama,
+      'email': email,
+      'password': password,
+      'role': role,
+    };
+  }
 }

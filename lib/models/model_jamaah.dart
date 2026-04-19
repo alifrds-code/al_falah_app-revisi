@@ -1,13 +1,13 @@
-import 'dart:convert';
-
+// Cetakan data biodata jamaah pengajian
 class JamaahModel {
   final int? idJamaah;
   final String namaLengkap;
   final String jenisKelamin;
   final String? noHp;
   final String alamat;
-  final int statusJamaah;
-  final int? idKelas; // KASIH TANDA TANYA BIAR BOLEH KOSONG
+  final int statusJamaah; // 1 = Aktif, 0 = Nonaktif
+  final int? idKelas;
+  final String? namaKelas; // Dari JOIN dengan tb_kelas, tidak disimpan ke database
 
   JamaahModel({
     this.idJamaah,
@@ -16,12 +16,28 @@ class JamaahModel {
     this.noHp,
     required this.alamat,
     this.statusJamaah = 1,
-    this.idKelas, // HAPUS KATA 'required' DI SINI
+    this.idKelas,
+    this.namaKelas,
   });
 
+  // Membuat JamaahModel dari data Map (dari database)
+  factory JamaahModel.fromMap(Map<String, dynamic> map) {
+    return JamaahModel(
+      idJamaah: map['id_jamaah'],
+      namaLengkap: map['nama_lengkap'] ?? '',
+      jenisKelamin: map['jenis_kelamin'] ?? '',
+      noHp: map['no_hp'],
+      alamat: map['alamat'] ?? '',
+      statusJamaah: map['status_jamaah'] ?? 1,
+      idKelas: map['id_kelas'],
+      namaKelas: map['nama_kelas'], // Dari LEFT JOIN
+    );
+  }
+
+  // Mengubah JamaahModel kembali jadi Map (untuk disimpan ke database)
+  // PENTING: namaKelas tidak ikut disimpan karena bukan kolom di tabel
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id_jamaah': idJamaah,
+    return {
       'nama_lengkap': namaLengkap,
       'jenis_kelamin': jenisKelamin,
       'no_hp': noHp,
@@ -31,21 +47,6 @@ class JamaahModel {
     };
   }
 
-  factory JamaahModel.fromMap(Map<String, dynamic> map) {
-    return JamaahModel(
-      idJamaah: map['id_jamaah'] != null ? map['id_jamaah'] as int : null,
-      namaLengkap: map['nama_lengkap'] as String,
-      jenisKelamin: map['jenis_kelamin'] as String,
-      noHp: map['no_hp'] != null ? map['no_hp'] as String : null,
-      alamat: map['alamat'] as String,
-      statusJamaah: map['status_jamaah'] as int,
-      // PENGAMAN BIAR GAK ERROR KALAU NULL
-      idKelas: map['id_kelas'] != null ? map['id_kelas'] as int : null,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory JamaahModel.fromJson(String source) =>
-      JamaahModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  // Getter alias untuk kompatibilitas dengan kode lama
+  String? get telepon => noHp;
 }

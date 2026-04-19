@@ -1,102 +1,95 @@
-// WIDGET CETAKAN FORM INPUT (Daur Ulang)
-// Desain modern ala Tailwind (Rounded-xl, Focus Emerald)
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/utils/app_colors.dart'; // Palet warna kita
+import '../utils/app_colors.dart';
 
+// Kolom input teks yang dipakai berulang di seluruh form aplikasi
 class FormIsian extends StatefulWidget {
+  final String label;
+  final String hint;
   final TextEditingController controller;
-  final String labelText;
-  final IconData prefixIcon;
   final bool isPassword;
   final TextInputType keyboardType;
-  final String? Function(String?)? validator;
+  final IconData? prefixIcon;
+  final int maxLines;
 
   const FormIsian({
-    Key? key,
+    super.key,
+    required this.label,
+    required this.hint,
     required this.controller,
-    required this.labelText,
-    required this.prefixIcon,
-    this.isPassword = false, // Default-nya bukan password
+    this.isPassword = false,
     this.keyboardType = TextInputType.text,
-    this.validator,
-  }) : super(key: key);
+    this.prefixIcon,
+    this.maxLines = 1,
+  });
 
   @override
   State<FormIsian> createState() => _FormIsianState();
 }
 
 class _FormIsianState extends State<FormIsian> {
-  // Variabel buat ngatur buka-tutup mata password
-  bool _isObscure = true;
+  bool _showPassword = false;
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: widget.controller,
-      obscureText: widget.isPassword ? _isObscure : false,
-      keyboardType: widget.keyboardType,
-      style: const TextStyle(
-        fontSize: 14, // Teks input ukuran normal (text-sm)
-        color: AppColors.textHeading,
-      ),
-      decoration: InputDecoration(
-        labelText: widget.labelText,
-        labelStyle: const TextStyle(color: AppColors.textSubtitle), // gray-500
-        // Ikon di kiri
-        prefixIcon: Icon(
-          widget.prefixIcon,
-          color: AppColors.textHint,
-          size: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.text,
+          ),
         ),
-
-        // Ikon Mata di kanan (MUNCUL KALAU isPassword = true AJA)
-        suffixIcon: widget.isPassword
-            ? IconButton(
-                icon: Icon(
-                  _isObscure ? Icons.visibility_off : Icons.visibility,
-                  color: AppColors.textHint,
-                  size: 20,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isObscure = !_isObscure; // Ganti status sembunyi/tampil
-                  });
-                },
-              )
-            : null,
-
-        filled: true,
-        fillColor: AppColors.surface, // Background putih
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+        const SizedBox(height: 8),
+        TextField(
+          controller: widget.controller,
+          obscureText: widget.isPassword && !_showPassword,
+          keyboardType: widget.keyboardType,
+          maxLines: widget.isPassword ? 1 : widget.maxLines,
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+            filled: true,
+            fillColor: AppColors.background,
+            prefixIcon: widget.prefixIcon != null
+                ? Icon(widget.prefixIcon, color: AppColors.muted, size: 20)
+                : null,
+            // Tombol show/hide password
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.muted,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() => _showPassword = !_showPassword);
+                    },
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
         ),
-
-        // 1. Kondisi Normal (Garis abu-abu)
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-
-        // 2. Kondisi Lagi Diketik (Garis Emerald terang & tebal)
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-
-        // 3. Kondisi Error/Kosong (Garis Merah Rose)
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger),
-        ),
-
-        // 4. Kondisi Error tapi lagi diketik
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger, width: 2),
-        ),
-      ),
-      validator: widget.validator, // Sambungin ke kunci rahasia form
+      ],
     );
   }
 }
