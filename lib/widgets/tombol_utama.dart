@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
-// Tombol utama berwarna hijau untuk dipakai berulang di seluruh aplikasi
+// ini widget tombol gede ijo yang sering dipake di mana-mana
 class TombolUtama extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
@@ -20,6 +20,7 @@ class TombolUtama extends StatelessWidget {
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
+        // kalo lagi loading, tombolnya gue matiin biar gak diklik terus
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,

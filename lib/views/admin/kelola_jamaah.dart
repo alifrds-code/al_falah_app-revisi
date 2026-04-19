@@ -7,7 +7,7 @@ import '../../controllers/admin_controller.dart';
 import '../../models/model_jamaah.dart';
 import '../../models/model_kelas.dart';
 
-// Layar kelola biodata jamaah oleh Admin
+// layar buat admin ngatur biodata jamaah, bisa nambah atau hapus
 class KelolaJamaah extends StatefulWidget {
   const KelolaJamaah({super.key});
 
@@ -18,29 +18,30 @@ class KelolaJamaah extends StatefulWidget {
 class _KelolaJamaahState extends State<KelolaJamaah> {
   final AdminController _controller = AdminController();
 
-  // Daftar jamaah yang ditampilkan
+  // daftar jamaah yang tampil di layar
   List<JamaahModel> _jamaah = [];
-  // Daftar jamaah asli (untuk filter pencarian)
+  // simpenan daftar asli biar bisa dicari-cari (filter)
   List<JamaahModel> _jamaahAsli = [];
-  // Daftar kelas untuk dropdown
+  // daftar kelas buat dropdown pas nambah jamaah
   List<KelasModel> _kelas = [];
   bool _isLoading = true;
 
-  // Controller form tambah jamaah
+  // controller buat kotak-kotak inputan
   final TextEditingController _namaCtrl = TextEditingController();
   final TextEditingController _telpCtrl = TextEditingController();
   final TextEditingController _alamatCtrl = TextEditingController();
   final TextEditingController _cariCtrl = TextEditingController();
 
-  // Pilihan dropdown
+  // variabel buat nampung pilihan admin di dropdown
   KelasModel? _selectedKelas;
   String _selectedGender = 'Laki-laki';
 
   @override
   void initState() {
     super.initState();
+    // pas buka layar, tarik data dari db
     _loadData();
-    // Dengarkan perubahan teks pencarian
+    // mantau kalo ada yang ngetik di kotak pencarian
     _cariCtrl.addListener(_filterJamaah);
   }
 
@@ -53,7 +54,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     super.dispose();
   }
 
-  // Ambil data dari database
+  // fungsi buat ambil data jamaah sama kelas dari database
   void _loadData() async {
     final dataJamaah = await _controller.getJamaah();
     final dataKelas = await _controller.getClasses();
@@ -66,7 +67,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     });
   }
 
-  // Filter jamaah berdasarkan teks pencarian
+  // fungsi buat nyaring daftar jamaah pas admin ngetik di kotak cari
   void _filterJamaah() {
     final kata = _cariCtrl.text.toLowerCase();
     setState(() {
@@ -81,8 +82,9 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     });
   }
 
-  // Simpan jamaah baru ke database
+  // fungsi pas admin pencet tombol simpan jamaah baru
   void _handleAdd() async {
+    // pastiin nama sama alamat diisi, kasian kalo kosong
     if (_namaCtrl.text.isEmpty || _alamatCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nama dan alamat wajib diisi')),
@@ -99,27 +101,29 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     );
 
     await _controller.addJamaah(jamaahBaru);
+    
+    // kalo udah sukses, bersihin semua kotaknya
     _namaCtrl.clear();
     _telpCtrl.clear();
     _alamatCtrl.clear();
     _selectedGender = 'Laki-laki';
 
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup form popup
+      _loadData(); // munculin data terbaru
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Jamaah berhasil ditambahkan')),
       );
     }
   }
 
-  // Konfirmasi hapus jamaah
+  // nanya dulu beneran mau hapus jamaah apa enggak
   void _confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Jamaah?'),
-        content: const Text('Data jamaah ini akan dihapus permanen dari sistem.'),
+        content: const Text('Data jamaah ini bakal ilang selamanya dari sistem lho.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -152,7 +156,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
       ),
       body: Column(
         children: [
-          // Kotak pencarian
+          // kotak buat admin nyari nama jamaah
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.white,
@@ -172,7 +176,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
             ),
           ),
 
-          // Daftar jamaah
+          // nampilin daftar jamaah pake listview
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -191,6 +195,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
           ),
         ],
       ),
+      // tombol melayang buat nambah jamaah baru
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddForm(context),
         backgroundColor: AppColors.primary,
@@ -199,7 +204,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     );
   }
 
-  // Kartu satu jamaah
+  // desain tiap baris jamaah
   Widget _buildJamaahCard(JamaahModel jamaah) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -211,7 +216,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
       ),
       child: Row(
         children: [
-          // Foto profil dengan inisial nama
+          // inisial nama jamaah di dalem buletan
           CircleAvatar(
             backgroundColor: AppColors.primaryLight,
             radius: 24,
@@ -237,6 +242,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                   ),
                 ),
                 const SizedBox(height: 2),
+                // nampilin nama kelasnya biar gak ketuker
                 Text(
                   jamaah.namaKelas ?? 'Tanpa Kelas',
                   style: const TextStyle(
@@ -252,7 +258,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
               ],
             ),
           ),
-          // Tombol hapus
+          // tombol buat hapus biodata jamaah
           IconButton(
             onPressed: () => _confirmDelete(jamaah.idJamaah!),
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.red),
@@ -262,7 +268,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
     );
   }
 
-  // Form tambah jamaah baru (muncul dari bawah layar)
+  // popup yang muncul dari bawah pas admin mau input jamaah baru
   void _showAddForm(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -292,7 +298,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
                 const SizedBox(height: 20),
 
-                // Input nama lengkap
+                // inputan nama
                 FormIsian(
                   label: 'Nama Lengkap',
                   hint: 'Ketik nama jamaah',
@@ -300,7 +306,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
                 const SizedBox(height: 16),
 
-                // Pilih jenis kelamin
+                // milih laki atau perempuan
                 const Text(
                   'Jenis Kelamin',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
@@ -328,7 +334,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
                 const SizedBox(height: 16),
 
-                // Pilih kelas
+                // milih kelas yang diikutin jamaah ini
                 const Text(
                   'Pilih Kelas',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
@@ -360,7 +366,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
                 const SizedBox(height: 16),
 
-                // Input nomor telepon
+                // nomor HP
                 FormIsian(
                   label: 'Nomor Telepon (Opsional)',
                   hint: '0812...',
@@ -369,7 +375,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                 ),
                 const SizedBox(height: 16),
 
-                // Input alamat
+                // alamat rumah
                 FormIsian(
                   label: 'Alamat',
                   hint: 'Ketik alamat lengkap',

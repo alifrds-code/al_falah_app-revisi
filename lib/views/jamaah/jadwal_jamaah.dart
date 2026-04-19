@@ -7,7 +7,7 @@ import '../../models/model_jadwal.dart';
 import 'layar_pilih_kelas.dart';
 import 'info_yayasan.dart';
 
-// Layar daftar semua jadwal dari kelas yang dipilih jamaah
+// layar buat jamaah liat semua jadwal kajian buat kelas yang dia pilih
 class JadwalJamaah extends StatefulWidget {
   const JadwalJamaah({super.key});
 
@@ -23,9 +23,11 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
   @override
   void initState() {
     super.initState();
+    // pas pertama masuk, langsung tarik data jadwalnya
     _loadData();
   }
 
+  // fungsi buat minta list jadwal dari database
   void _loadData() async {
     final data = await _controller.getMySchedules();
     setState(() {
@@ -41,7 +43,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // bagian kepala layar biar tau lagi di mana
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               color: AppColors.primary,
@@ -57,13 +59,13 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
               ),
             ),
 
-            // Daftar jadwal
+            // nampilin list jadwalnya
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _jadwal.isEmpty
                       ? const TampilanKosong(
-                          pesan: 'Belum ada jadwal untuk kelas pilihan Anda.\nCoba ubah pilihan kelas.',
+                          pesan: 'Belum ada jadwal nih buat kelas pilihan lu.\nCoba ganti pilihan kelasnya deh.',
                           icon: Icons.calendar_month_outlined,
                         )
                       : RefreshIndicator(
@@ -82,7 +84,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
                         ),
             ),
 
-            // Tombol ubah pilihan kelas
+            // tombol melayang buat ganti kelas, ditaruh di bawah tengah
             if (!_isLoading)
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
@@ -95,7 +97,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
                           MaterialPageRoute(
                             builder: (context) => const LayarPilihKelas(),
                           ),
-                        ).then((_) => _loadData());
+                        ).then((_) => _loadData()); // refresh data pas balik dari sana
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -117,7 +119,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
         ),
       ),
 
-      // Nav bar bawah
+      // menu navigasi di bawah layar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -134,7 +136,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
     );
   }
 
-  // Kartu satu jadwal
+  // widget buat kotak satu baris jadwal
   Widget _buildJadwalCard(JadwalModel j) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -148,13 +150,13 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Tanggal
+              // nampilin tanggal kajiannya
               Text(
                 j.tanggal,
                 style: const TextStyle(fontSize: 13, color: AppColors.muted),
               ),
               const SizedBox(height: 4),
-              // Nama pemateri
+              // nampilin nama guru/pematerinya
               Text(
                 j.namaPemateri,
                 style: const TextStyle(
@@ -164,12 +166,12 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
                 ),
               ),
               const SizedBox(height: 2),
-              // Detail waktu dan materi
+              // nampilin detail jam sama materinya
               Text(
                 '${j.waktuMulai} – ${j.waktuSelesai}  •  ${j.materiPembahasan ?? "Kajian Rutin"}',
                 style: const TextStyle(fontSize: 13, color: AppColors.muted, height: 1.4),
               ),
-              // Nama kelas
+              // nampilin kelasnya biar gak ketuker
               if (j.namaKelas != null) ...[
                 const SizedBox(height: 4),
                 Text(
@@ -181,7 +183,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
                   ),
                 ),
               ],
-              // Alasan penundaan/pembatalan
+              // kalo jadwalnya telat atau batal, ada alasannya di sini
               if (j.alasanPerubahan != null && j.alasanPerubahan!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Row(
@@ -204,7 +206,7 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
               ],
             ],
           ),
-          // Badge status di pojok kanan atas
+          // label status (sesuai jadwal/ditunda/batal) di pojok kanan
           Positioned(
             top: 0,
             right: 0,
@@ -215,14 +217,16 @@ class _JadwalJamaahState extends State<JadwalJamaah> {
     );
   }
 
-  // Item navigasi bawah
+  // buat bikin item menu navigasi bawah
   Widget _buildNavItem(BuildContext context, int index, IconData icon, String label, {bool isActive = false}) {
     return Expanded(
       child: InkWell(
         onTap: () {
           if (index == 0) {
+            // kalo ke beranda balik sampe awal
             Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 2) {
+            // kalo ke info, ganti halamannya
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const InfoYayasan()),

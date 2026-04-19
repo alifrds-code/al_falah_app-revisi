@@ -11,7 +11,7 @@ import 'kelola_jamaah.dart';
 import 'kelola_info.dart';
 import 'laporan_absensi.dart';
 
-// Dashboard Admin - halaman utama setelah admin login
+// ini halaman utama kalo admin udah berhasil masuk (login)
 class BerandaAdmin extends StatefulWidget {
   const BerandaAdmin({super.key});
 
@@ -29,9 +29,11 @@ class _BerandaAdminState extends State<BerandaAdmin> {
   @override
   void initState() {
     super.initState();
+    // pas buka halaman, langsung gue tarik data statistiknya
     _loadData();
   }
 
+  // fungsi buat ambil data angka-angka buat dipajang di dashboard
   void _loadData() async {
     final user = await _loginController.getCurrentUser();
     final stats = await _adminController.getDashboardStats();
@@ -42,6 +44,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
     });
   }
 
+  // kalo admin mau keluar, gue bersihin session-nya terus balik ke awal
   void _handleLogout() async {
     await _loginController.logout();
     if (mounted) {
@@ -60,7 +63,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header hijau
+            // bagian atas warna hijau, ada tulisan panel admin
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
               color: AppColors.primary,
@@ -84,6 +87,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                       ),
                     ],
                   ),
+                  // tombol buat logout di pojok kanan atas
                   IconButton(
                     onPressed: _handleLogout,
                     icon: const Icon(Icons.logout_rounded, color: Colors.white),
@@ -92,7 +96,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
               ),
             ),
 
-            // Kartu statistik (3 kartu angka)
+            // nampilin 3 kotak angka (jamaah, kelas, asisten)
             Padding(
               padding: const EdgeInsets.all(18),
               child: _isLoading
@@ -108,7 +112,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                     ),
             ),
 
-            // Menu navigasi admin
+            // list menu buat ngatur-ngatur data
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -122,6 +126,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  // tombol-tombol menu navigasi
                   _buildMenuItem(
                     context,
                     Icons.badge_rounded,
@@ -156,7 +161,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                     'Laporan Absensi',
                     'Ekspor data kehadiran ke CSV',
                     const LaporanAbsensi(),
-                    onReturn: _loadData, // Refresh stats setelah kembali
+                    onReturn: _loadData, // abis balik dari sini gue refresh lagi datanya
                   ),
                   const SizedBox(height: 30),
                 ],
@@ -168,7 +173,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
     );
   }
 
-  // Kartu statistik kecil
+  // widget buat bikin kotak angka statistik
   Widget _buildStatCard(String label, String value, IconData icon) {
     return Expanded(
       child: Container(
@@ -208,7 +213,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
     );
   }
 
-  // Item menu navigasi
+  // widget buat bikin barisan menu di dashboard
   Widget _buildMenuItem(
     BuildContext context,
     IconData icon,
@@ -226,7 +231,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
             context,
             MaterialPageRoute(builder: (context) => destination),
           );
-          // Kalau ada callback setelah kembali (misal refresh stats)
+          // kalo user balik lagi (pencet back), jalanin fungsi ini (biasanya buat refresh data)
           if (onReturn != null) onReturn();
         },
         child: Container(
@@ -238,6 +243,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
           ),
           child: Row(
             children: [
+              // kotak ikon menu
               Container(
                 width: 50,
                 height: 50,
@@ -248,6 +254,7 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                 child: Icon(icon, color: AppColors.primary, size: 26),
               ),
               const SizedBox(width: 16),
+              // tulisan judul sama keterangannya
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

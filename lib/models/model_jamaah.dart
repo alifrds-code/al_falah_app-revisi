@@ -1,13 +1,14 @@
-// Cetakan data biodata jamaah pengajian
+// ini cetakan buat nyimpen data biodata lengkap jamaah
 class JamaahModel {
   final int? idJamaah;
   final String namaLengkap;
   final String jenisKelamin;
   final String? noHp;
   final String alamat;
-  final int statusJamaah; // 1 = Aktif, 0 = Nonaktif
+  final int statusJamaah; // ini statusnya: 1 kalo aktif, 0 kalo udah gak aktif
   final int? idKelas;
-  final String? namaKelas; // Dari JOIN dengan tb_kelas, tidak disimpan ke database
+  // ini tambahan buat nampilin nama kelasnya aja, gak usah disimpen ke tabel jamaah
+  final String? namaKelas; 
 
   JamaahModel({
     this.idJamaah,
@@ -20,7 +21,7 @@ class JamaahModel {
     this.namaKelas,
   });
 
-  // Membuat JamaahModel dari data Map (dari database)
+  // fungsi buat ngerubah data dari database jadi objek jamaah
   factory JamaahModel.fromMap(Map<String, dynamic> map) {
     return JamaahModel(
       idJamaah: map['id_jamaah'],
@@ -30,12 +31,12 @@ class JamaahModel {
       alamat: map['alamat'] ?? '',
       statusJamaah: map['status_jamaah'] ?? 1,
       idKelas: map['id_kelas'],
-      namaKelas: map['nama_kelas'], // Dari LEFT JOIN
+      namaKelas: map['nama_kelas'], // ini dapet dari JOIN biasanya
     );
   }
 
-  // Mengubah JamaahModel kembali jadi Map (untuk disimpan ke database)
-  // PENTING: namaKelas tidak ikut disimpan karena bukan kolom di tabel
+  // fungsi buat ngerubah objek jamaah balik jadi map biar bisa disimpen
+  // oiya, nama_kelas sengaja gak gue masukin karena emang gak ada kolomnya di tabel
   Map<String, dynamic> toMap() {
     return {
       'nama_lengkap': namaLengkap,
@@ -47,6 +48,6 @@ class JamaahModel {
     };
   }
 
-  // Getter alias untuk kompatibilitas dengan kode lama
+  // ini alias aja sih biar kalo ada kode lama yang manggil 'telepon' masih nyambung
   String? get telepon => noHp;
 }

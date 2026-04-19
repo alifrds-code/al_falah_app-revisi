@@ -5,6 +5,7 @@ import '../../widgets/form_isian.dart';
 import '../../controllers/admin_controller.dart';
 import '../../models/model_kelas.dart';
 
+// layar buat admin ngatur-ngatur daftar kelas yang ada
 class KelolaKelas extends StatefulWidget {
   const KelolaKelas({super.key});
 
@@ -17,14 +18,17 @@ class _KelolaKelasState extends State<KelolaKelas> {
   List<KelasModel> _classes = [];
   bool _isLoading = true;
 
+  // controller buat kotak ngetik nama kelas
   final TextEditingController _nameCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    // pas pertama masuk langsung tarik datanya
     _loadData();
   }
 
+  // fungsi buat minta list kelas dari database
   void _loadData() async {
     final data = await _controller.getClasses();
     setState(() {
@@ -33,28 +37,33 @@ class _KelolaKelasState extends State<KelolaKelas> {
     });
   }
 
+  // fungsi buat simpen data, bisa buat nambah baru atau edit yang lama
   void _handleSave({int? id}) async {
+    // jangan sampe kosong namanya, nanti bingung
     if (_nameCtrl.text.isEmpty) return;
 
     if (id == null) {
+      // kalo id-nya gak ada, berarti nambah baru
       await _controller.addClass(_nameCtrl.text);
     } else {
+      // kalo ada ya berarti cuma mau ganti nama
       await _controller.updateClass(id, _nameCtrl.text);
     }
 
     _nameCtrl.clear();
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup form popup-nya
+      _loadData(); // update lagi list yang tampil
     }
   }
 
+  // buat mastiin admin beneran mau hapus kelasnya
   void _confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Kelas?'),
-        content: const Text('Seluruh data jamaah dan jadwal di kelas ini juga akan terhapus.'),
+        content: const Text('Ati-ati ya, kalo kelas dihapus, data jamaah sama jadwalnya juga ikut ilang semua.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           TextButton(
@@ -94,6 +103,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
                     return _buildKelasCard(k);
                   },
                 ),
+      // tombol plus buat nambah kelas baru
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(context),
         backgroundColor: AppColors.primary,
@@ -102,6 +112,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
     );
   }
 
+  // desain tiap kotak kelasnya
   Widget _buildKelasCard(KelasModel kelas) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -113,6 +124,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
       ),
       child: Row(
         children: [
+          // ikon sekolah kecil di samping
           Container(
             width: 44,
             height: 44,
@@ -120,12 +132,14 @@ class _KelolaKelasState extends State<KelolaKelas> {
             child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 24),
           ),
           const SizedBox(width: 14),
+          // nama kelasnya di tengah
           Expanded(
             child: Text(
               kelas.namaKelas,
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.text),
             ),
           ),
+          // tombol buat edit (ganti nama)
           IconButton(
             onPressed: () {
               _nameCtrl.text = kelas.namaKelas;
@@ -133,6 +147,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
             },
             icon: const Icon(Icons.edit_outlined, color: AppColors.muted),
           ),
+          // tombol buat hapus
           IconButton(
             onPressed: () => _confirmDelete(kelas.idKelas!),
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.red),
@@ -142,6 +157,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
     );
   }
 
+  // popup buat input data kelas baru atau ganti nama
   void _showForm(BuildContext context, {int? id}) {
     showModalBottomSheet(
       context: context,

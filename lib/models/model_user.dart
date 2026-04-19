@@ -1,10 +1,10 @@
-// Cetakan data pengguna (Admin & Asisten)
+// ini cetakan buat data akun pengguna (admin atau asisten)
 class UserModel {
   final int? idUser;
   final String nama;
   final String email;
   final String password;
-  final String role; // 'admin' atau 'asisten'
+  final String role; // aslinya cuma 'admin' atau 'asisten' aja sih
 
   UserModel({
     this.idUser,
@@ -14,7 +14,7 @@ class UserModel {
     required this.role,
   });
 
-  // Membuat UserModel dari data Map (dari database)
+  // fungsi buat ngerubah data dari map (database) jadi objek biar enak dipake di flutter
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       idUser: map['id_user'],
@@ -25,7 +25,7 @@ class UserModel {
     );
   }
 
-  // Mengubah UserModel kembali jadi Map (untuk disimpan ke database)
+  // fungsi buat ngerubah objek balik lagi jadi map biar bisa disimpen ke database
   Map<String, dynamic> toMap() {
     return {
       'id_user': idUser,

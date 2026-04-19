@@ -1,16 +1,17 @@
-// Cetakan data jadwal - statusJadwal pakai String sesuai database
+// ini cetakan buat data jadwal kajian
 class JadwalModel {
   final int? idJadwal;
-  final String? materiPembahasan; // Nullable karena bisa kosong
+  final String? materiPembahasan; // ini boleh kosong kalo emang belum nentuin materi
   final String namaPemateri;
   final String tanggal;
   final String waktuMulai;
   final String waktuSelesai;
-  final String statusJadwal; // 'Sesuai Jadwal', 'Ditunda', 'Dibatalkan'
+  final String statusJadwal; // isinya: 'Sesuai Jadwal', 'Ditunda', atau 'Dibatalkan'
   final String? alasanPerubahan;
   final int idKelas;
   final int idUser;
-  final String? namaKelas; // Dari JOIN, tidak disimpan ke database
+  // buat nampilin nama kelas pas di-JOIN doang, gak disimpen ke tabel asli
+  final String? namaKelas; 
 
   JadwalModel({
     this.idJadwal,
@@ -26,7 +27,7 @@ class JadwalModel {
     this.namaKelas,
   });
 
-  // Membuat JadwalModel dari data Map (dari database)
+  // fungsi buat ngerubah data dari database jadi objek jadwal biar enak diolah
   factory JadwalModel.fromMap(Map<String, dynamic> map) {
     return JadwalModel(
       idJadwal: map['id_jadwal'],
@@ -35,7 +36,7 @@ class JadwalModel {
       tanggal: map['tanggal'] ?? '',
       waktuMulai: map['waktu_mulai'] ?? '',
       waktuSelesai: map['waktu_selesai'] ?? '',
-      // Status jadwal bisa berupa String atau Integer dari versi lama
+      // ini gue kasih fungsi pembantu biar statusnya gak error pas dibaca
       statusJadwal: _parseStatus(map['status_jadwal']),
       alasanPerubahan: map['alasan_perubahan'],
       idKelas: map['id_kelas'] ?? 0,
@@ -44,18 +45,18 @@ class JadwalModel {
     );
   }
 
-  // Fungsi bantu untuk parsing status (kalau data lama pakai Integer)
+  // fungsi buat mastiin status jadwal bentuknya string, antisipasi data versi lama
   static String _parseStatus(dynamic status) {
     if (status == null) return 'Sesuai Jadwal';
     if (status is String) return status;
-    // Kalau masih Integer dari versi lama
+    // kalo ternyata isinya angka (versi jadul), gue terjemahin dulu
     if (status == 0) return 'Sesuai Jadwal';
     if (status == 1) return 'Ditunda';
     if (status == 2) return 'Dibatalkan';
     return 'Sesuai Jadwal';
   }
 
-  // Mengubah JadwalModel kembali jadi Map (untuk disimpan ke database)
+  // fungsi buat ngerubah objek jadwal balik jadi map biar bisa disimpen ke database
   Map<String, dynamic> toMap() {
     return {
       'materi_pembahasan': materiPembahasan,

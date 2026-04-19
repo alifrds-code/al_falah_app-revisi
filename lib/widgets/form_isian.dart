@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
-// Kolom input teks yang dipakai berulang di seluruh form aplikasi
+// ini widget buat bikin kotak isian (input teks) biar gak capek ngetik ulang-ulang
 class FormIsian extends StatefulWidget {
   final String label;
   final String hint;
@@ -27,6 +27,7 @@ class FormIsian extends StatefulWidget {
 }
 
 class _FormIsianState extends State<FormIsian> {
+  // buat ngatur mata melotot (liat password atau diumpetin)
   bool _showPassword = false;
 
   @override
@@ -34,6 +35,7 @@ class _FormIsianState extends State<FormIsian> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // label di atas kotaknya
         Text(
           widget.label,
           style: const TextStyle(
@@ -53,10 +55,11 @@ class _FormIsianState extends State<FormIsian> {
             hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
             filled: true,
             fillColor: AppColors.background,
+            // ikon di dalem kotak sebelah kiri kalo ada
             prefixIcon: widget.prefixIcon != null
                 ? Icon(widget.prefixIcon, color: AppColors.muted, size: 20)
                 : null,
-            // Tombol show/hide password
+            // tombol buat buka/tutup password
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
@@ -75,6 +78,7 @@ class _FormIsianState extends State<FormIsian> {
               horizontal: 16,
               vertical: 14,
             ),
+            // bentuk pinggiran kotaknya
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),

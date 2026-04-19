@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/local_storage_service.dart';
-import '../../database/sqflite_helper.dart';
+import '../../controllers/jamaah_controller.dart';
 import '../../widgets/tombol_utama.dart';
 import 'beranda_jamaah.dart';
 
-// Layar pertama kali buka aplikasi: pilih kelas yang diikuti
+// layar yang muncul pas pertama kali buka app, buat suruh jamaah milih kelas
 class LayarPilihKelas extends StatefulWidget {
   const LayarPilihKelas({super.key});
 
@@ -14,33 +14,38 @@ class LayarPilihKelas extends StatefulWidget {
 }
 
 class _LayarPilihKelasState extends State<LayarPilihKelas> {
-  // Daftar kelas dari database
+  final JamaahController _controller = JamaahController();
+  // daftar kelas yang gue ambil dari database
   List<Map<String, dynamic>> _daftarKelas = [];
-  // Id kelas yang dipilih
+  // nyimpen id kelas mana aja yang dicentang sama jamaah
   final Set<int> _selectedIds = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    // langsung tarik daftar kelasnya pas layar kebuka
     _loadKelas();
   }
 
-  // Ambil semua kelas dari database
+  // fungsi buat minta list semua kelas ke database
   void _loadKelas() async {
-    final data = await DBHelper.getAllKelas();
+    final data = await _controller.getAllKelas();
     setState(() {
       _daftarKelas = data;
       _isLoading = false;
     });
   }
 
-  // Simpan pilihan kelas dan lanjut ke beranda
+  // fungsi pas jamaah udah selese milih terus pencet lanjut
   void _handleLanjut() async {
+    // simpen pilihan kelasnya ke memori hp
     await LocalStorageService.saveSelectedClasses(_selectedIds.toList());
+    // tandain kalo user udah pernah buka app biar gak muncul layar ini lagi
     await LocalStorageService.setNotFirstTime();
 
     if (mounted) {
+      // langsung pindah ke halaman utama jamaah
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const BerandaJamaah()),
@@ -55,13 +60,13 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // bagian atas (header) ada sapaan sama instruksi
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo
+                  // logo bulet kecil di pojok
                   Container(
                     width: 64,
                     height: 64,
@@ -91,7 +96,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Centang kelas yang Anda ikuti.\nJadwal akan disesuaikan dengan pilihan Anda.',
+                    'Centang kelas yang Anda ikuti ya.\nNanti jadwalnya bakal otomatis nyesuain.',
                     style: TextStyle(
                       fontSize: 15,
                       color: Colors.white70,
@@ -102,7 +107,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
               ),
             ),
 
-            // Daftar kelas
+            // bagian list kelasnya pake background putih biar bersih
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -119,7 +124,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                             child: Padding(
                               padding: EdgeInsets.all(32),
                               child: Text(
-                                'Belum ada kelas yang tersedia.\nSilakan hubungi pengurus yayasan.',
+                                'Belum ada kelas nih.\nCoba kontak pengurus yayasan deh.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: AppColors.muted, fontSize: 15),
                               ),
@@ -138,6 +143,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: () {
                                   setState(() {
+                                    // kalo di-tap ganti status centangnya
                                     if (isSelected) {
                                       _selectedIds.remove(id);
                                     } else {
@@ -164,7 +170,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // Ikon kelas
+                                      // ikon sekolah di samping nama kelas
                                       Container(
                                         width: 44,
                                         height: 44,
@@ -183,7 +189,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                                         ),
                                       ),
                                       const SizedBox(width: 14),
-                                      // Nama kelas
+                                      // nama kelasnya
                                       Expanded(
                                         child: Text(
                                           kelas['nama_kelas'] as String,
@@ -196,7 +202,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                                           ),
                                         ),
                                       ),
-                                      // Centang
+                                      // kotak centang di ujung kanan
                                       Container(
                                         width: 26,
                                         height: 26,
@@ -229,14 +235,14 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
               ),
             ),
 
-            // Tombol lanjut
+            // tombol buat lanjut ke beranda di bagian paling bawah
             Container(
               color: AppColors.background,
               padding: const EdgeInsets.all(16),
               child: TombolUtama(
                 text: _selectedIds.isEmpty
-                    ? 'Lewati (Lihat Semua Jadwal)'
-                    : 'Mulai Gunakan Aplikasi',
+                    ? 'Lewati aja (Lihat Semua)'
+                    : 'Ayo Mulai!',
                 onPressed: _handleLanjut,
               ),
             ),

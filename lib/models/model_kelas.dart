@@ -1,3 +1,4 @@
+// ini cetakan buat data Master Kelas yang ada di aplikasi
 class KelasModel {
   final int? idKelas;
   final String namaKelas;
@@ -7,6 +8,7 @@ class KelasModel {
     required this.namaKelas,
   });
 
+  // fungsi buat ngerubah data mentah dari database jadi objek Kelas
   factory KelasModel.fromMap(Map<String, dynamic> map) {
     return KelasModel(
       idKelas: map['id_kelas'],
@@ -14,6 +16,7 @@ class KelasModel {
     );
   }
 
+  // fungsi buat ngerubah objek Kelas balik jadi map biar bisa dimasukin ke database
   Map<String, dynamic> toMap() {
     return {
       'id_kelas': idKelas,

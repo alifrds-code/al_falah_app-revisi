@@ -7,7 +7,7 @@ import '../../controllers/admin_controller.dart';
 import '../../models/model_pengumuman.dart';
 import '../../models/model_acara.dart';
 
-// Layar kelola pengumuman dan acara oleh Admin
+// layar buat admin ngatur pengumuman sama daftar acara yayasan
 class KelolaInfo extends StatefulWidget {
   const KelolaInfo({super.key});
 
@@ -23,11 +23,11 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
   List<AcaraModel> _acara = [];
   bool _isLoading = true;
 
-  // Controller form pengumuman
+  // controller buat kotak input pengumuman
   final TextEditingController _annTitleCtrl = TextEditingController();
   final TextEditingController _annBodyCtrl = TextEditingController();
 
-  // Controller form acara
+  // controller buat kotak input acara (banyak bener dah)
   final TextEditingController _evtNameCtrl = TextEditingController();
   final TextEditingController _evtDescCtrl = TextEditingController();
   final TextEditingController _evtDateCtrl = TextEditingController();
@@ -38,7 +38,9 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    // bikin tab buat misahin pengumuman sama acara
     _tabController = TabController(length: 2, vsync: this);
+    // ambil datanya dari database
     _loadData();
   }
 
@@ -56,6 +58,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  // fungsi buat tarik data pengumuman sama acara sekaligus
   void _loadData() async {
     final dataPengumuman = await _controller.getPengumuman();
     final dataAcara = await _controller.getAcara();
@@ -66,8 +69,9 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     });
   }
 
-  // Simpan pengumuman baru
+  // fungsi pas admin mau ngepost pengumuman baru
   void _handleSaveAnn() async {
+    // pastiin judul sama pesannya diisi biar gak kosong melompong
     if (_annTitleCtrl.text.isEmpty || _annBodyCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Judul dan isi wajib diisi')),
@@ -75,24 +79,27 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
       return;
     }
     await _controller.postAnnouncement(_annTitleCtrl.text.trim(), _annBodyCtrl.text.trim());
+    
+    // kalo udah sukses, kotaknya dibersihin ya
     _annTitleCtrl.clear();
     _annBodyCtrl.clear();
+    
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup popup formnya
+      _loadData(); // munculin data baru yang barusan dibuat
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pengumuman berhasil diposting')),
       );
     }
   }
 
-  // Hapus pengumuman
+  // nanya dulu beneran mau hapus pengumuman apa enggak
   void _confirmDeleteAnn(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Pengumuman?'),
-        content: const Text('Pengumuman ini akan dihapus permanen.'),
+        content: const Text('Pengumuman ini bakal ilang selamanya ya.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           TextButton(
@@ -110,14 +117,16 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Simpan acara baru
+  // fungsi pas admin mau bikin agenda acara baru
   void _handleSaveEvt() async {
+    // nama acara sama tanggal itu wajib banget biar jamaah tau kapan dateng
     if (_evtNameCtrl.text.isEmpty || _evtDateCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nama acara dan tanggal wajib diisi')),
       );
       return;
     }
+    
     final acara = AcaraModel(
       namaAcara: _evtNameCtrl.text.trim(),
       deskripsi: _evtDescCtrl.text.trim(),
@@ -126,29 +135,33 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
       lokasi: _evtLocCtrl.text.trim(),
       namaPemateri: _evtSpeakerCtrl.text.trim(),
     );
+    
     await _controller.postEvent(acara);
+    
+    // beresin semua kotak inputan acara
     _evtNameCtrl.clear();
     _evtDescCtrl.clear();
     _evtDateCtrl.clear();
     _evtTimeCtrl.clear();
     _evtLocCtrl.clear();
     _evtSpeakerCtrl.clear();
+    
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup popup
+      _loadData(); // refresh list acaranya
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kegiatan berhasil diposting')),
       );
     }
   }
 
-  // Hapus acara
+  // nanya beneran mau hapus acara ini apa enggak
   void _confirmDeleteEvt(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Acara?'),
-        content: const Text('Data acara ini akan dihapus permanen.'),
+        content: const Text('Data acara ini bakalan ilang dari sistem.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           TextButton(
@@ -175,6 +188,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        // bagian tab di bawah judul AppBar
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -191,20 +205,20 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
           : TabBarView(
               controller: _tabController,
               children: [
-                // TAB 1: Pengumuman
+                // isi tab pengumuman
                 _buildPengumumanTab(),
-                // TAB 2: Acara
+                // isi tab acara
                 _buildAcaraTab(),
               ],
             ),
     );
   }
 
-  // Tab daftar pengumuman
+  // widget buat nampilin tab bagian pengumuman
   Widget _buildPengumumanTab() {
     return Column(
       children: [
-        // Tombol buat pengumuman baru
+        // tombol buat bikin pengumuman baru
         Padding(
           padding: const EdgeInsets.all(16),
           child: TombolUtama(
@@ -212,7 +226,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
             onPressed: () => _showAnnForm(context),
           ),
         ),
-        // Daftar pengumuman
+        // list pengumumannya di bawah sini
         Expanded(
           child: _pengumuman.isEmpty
               ? const TampilanKosong(
@@ -232,7 +246,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Kartu satu pengumuman
+  // desain kotak satu pengumuman
   Widget _buildPengumumanCard(PengumumanModel p) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -257,6 +271,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
                   ),
                 ),
               ),
+              // tombol hapus kecil di pojok kanan
               IconButton(
                 onPressed: () => _confirmDeleteAnn(p.idPengumuman!),
                 icon: const Icon(Icons.delete_outline_rounded, color: AppColors.red, size: 20),
@@ -270,6 +285,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
             style: const TextStyle(fontSize: 13, color: AppColors.muted),
           ),
           const SizedBox(height: 8),
+          // nampilin tanggal pas pengumuman itu diposting
           Text(
             p.tanggalPost.substring(0, 10),
             style: const TextStyle(fontSize: 11, color: AppColors.muted),
@@ -279,11 +295,11 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Tab daftar acara
+  // widget buat nampilin tab bagian acara agenda
   Widget _buildAcaraTab() {
     return Column(
       children: [
-        // Tombol buat acara baru
+        // tombol buat bikin acara baru
         Padding(
           padding: const EdgeInsets.all(16),
           child: TombolUtama(
@@ -291,7 +307,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
             onPressed: () => _showEvtForm(context),
           ),
         ),
-        // Daftar acara
+        // list acaranya di bawah
         Expanded(
           child: _acara.isEmpty
               ? const TampilanKosong(
@@ -311,7 +327,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Kartu satu acara
+  // desain kotak satu acara
   Widget _buildAcaraCard(AcaraModel a) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -342,6 +358,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
               ),
             ],
           ),
+          // info waktu sama tanggal acara
           Row(
             children: [
               const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.muted),
@@ -353,6 +370,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
             ],
           ),
           const SizedBox(height: 4),
+          // info tempatnya di mana
           Row(
             children: [
               const Icon(Icons.location_on_outlined, size: 14, color: AppColors.muted),
@@ -368,7 +386,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Form buat pengumuman baru (muncul dari bawah)
+  // popup form bwt input pengumuman baru
   void _showAnnForm(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -418,7 +436,7 @@ class _KelolaInfoState extends State<KelolaInfo> with SingleTickerProviderStateM
     );
   }
 
-  // Form buat acara baru (muncul dari bawah)
+  // popup form bwt input agenda acara baru
   void _showEvtForm(BuildContext context) {
     showModalBottomSheet(
       context: context,

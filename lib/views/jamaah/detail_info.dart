@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 
+// layar buat nampilin detail pengumuman atau acara biar puas bacanya
 class DetailInfo extends StatefulWidget {
   final String title;
   final String body;
@@ -18,11 +19,13 @@ class DetailInfo extends StatefulWidget {
 }
 
 class _DetailInfoState extends State<DetailInfo> {
+  // ukuran huruf bawaan, biar bisa digedein kecilin sama jamaah
   double _fontSize = 15.0;
 
+  // fungsi buat nambah atau ngurangin ukuran huruf
   void _changeFontSize(double delta) {
     setState(() {
-      _fontSize = (_fontSize + delta).clamp(13.0, 22.0);
+      _fontSize = (_fontSize + delta).clamp(13.0, 22.0); // gue batesin biar gak kegedean banget
     });
   }
 
@@ -33,7 +36,7 @@ class _DetailInfoState extends State<DetailInfo> {
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar
+            // bagian kepala layar (AppBar) custom
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
               color: AppColors.primary,
@@ -55,12 +58,12 @@ class _DetailInfoState extends State<DetailInfo> {
               ),
             ),
 
-            // Content
+            // bagian isi beritanya
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(14),
                 children: [
-                  // Placeholder Image / Icon
+                  // gambar dekorasi di atas judul
                   Container(
                     height: 110,
                     width: double.infinity,
@@ -78,7 +81,7 @@ class _DetailInfoState extends State<DetailInfo> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Font Scale Control
+                  // alat buat ngatur ukuran huruf biar bacanya enak
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -101,7 +104,7 @@ class _DetailInfoState extends State<DetailInfo> {
                   ),
                   const SizedBox(height: 14),
 
-                  // Title
+                  // judul beritanya
                   Text(
                     widget.title,
                     style: TextStyle(
@@ -113,12 +116,12 @@ class _DetailInfoState extends State<DetailInfo> {
                   const SizedBox(height: 14),
                   const Divider(height: 1, thickness: 0.5),
 
-                  // Meta Rows
+                  // barisan info tambahan (kayak tanggal)
                   _buildMetaRow('Tanggal', widget.date),
                   const Divider(height: 1, thickness: 0.5),
                   const SizedBox(height: 14),
 
-                  // Body text
+                  // teks isi beritanya
                   Text(
                     widget.body,
                     style: TextStyle(
@@ -136,6 +139,7 @@ class _DetailInfoState extends State<DetailInfo> {
     );
   }
 
+  // widget buat bikin tombol A+ atau A- tadi
   Widget _buildFsBtn(String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -158,6 +162,7 @@ class _DetailInfoState extends State<DetailInfo> {
     );
   }
 
+  // widget buat baris info metadata biar rapi
   Widget _buildMetaRow(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),

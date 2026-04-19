@@ -7,7 +7,7 @@ import 'info_yayasan.dart';
 import 'bacaan_wirid.dart';
 import '../auth/layar_login.dart';
 
-// Beranda utama jamaah (publik, tanpa login)
+// ini halaman utama buat jamaah, bisa dibuka siapa aja tanpa login
 class BerandaJamaah extends StatefulWidget {
   const BerandaJamaah({super.key});
 
@@ -17,22 +17,24 @@ class BerandaJamaah extends StatefulWidget {
 
 class _BerandaJamaahState extends State<BerandaJamaah> {
   final JamaahController _controller = JamaahController();
-  int _currentIndex = 0; // Index tab bawah
-  List<JadwalModel> _highlights = []; // Jadwal hari ini
-  List<JadwalModel> _upcoming = []; // 3 jadwal terdekat
+  int _currentIndex = 0; // buat nandain lagi di tab mana (beranda/jadwal/info)
+  List<JadwalModel> _highlights = []; // buat nampung jadwal hari ini
+  List<JadwalModel> _upcoming = []; // buat nampung 3 jadwal paling deket
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    // pas buka aplikasi langsung gue tarik data jadwal terbaru
     _loadData();
   }
 
+  // fungsi buat ambil data dari database lewat controller
   void _loadData() async {
     final highlights = await _controller.getTodayHighlights();
     final semua = await _controller.getMySchedules();
 
-    // Filter jadwal yang tanggalnya >= hari ini, max 3
+    // gue saring jadwal yang tanggalnya hari ini ke depan, maksimal 3 aja
     final today = DateTime.now().toIso8601String().split('T')[0];
     final upcomingList = semua
         .where((j) => j.tanggal.compareTo(today) >= 0)
@@ -72,7 +74,8 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
       'November',
       'Desember',
     ];
-    // Ubah weekday: 1=Senin, 7=Ahad
+    
+    // ngitung hari apa sekarang biar tampilannya keren
     final hariIndex = now.weekday == 7 ? 6 : now.weekday - 1;
     final tanggalStr =
         '${hariList[hariIndex]}, ${now.day} ${bulanList[now.month - 1]} ${now.year}';
@@ -82,7 +85,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header hijau
+            // bagian kepala warna hijau, isinya nama aplikasi sama tanggal
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               color: AppColors.primary,
@@ -109,9 +112,9 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
                       ),
                     ],
                   ),
-                  // Tombol tersembunyi untuk login pengurus (long press)
+                  // gembok buat login pengurus, tinggal tap aja buat masuk
                   GestureDetector(
-                    onLongPress: () {
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -137,14 +140,14 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
               ),
             ),
 
-            // Konten utama
+            // isi kontennya ada di dalem expanded biar bisa di-scroll
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        // Highlight jadwal hari ini
+                        // kalo ada jadwal hari ini, gue kasih kotak spesial
                         if (_highlights.isNotEmpty) ...[
                           const Text(
                             'Jadwal Hari Ini',
@@ -159,7 +162,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
                           const SizedBox(height: 20),
                         ],
 
-                        // Jadwal terdekat
+                        // daftar jadwal yang bakalan dateng
                         const Text(
                           'Jadwal Terdekat',
                           style: TextStyle(
@@ -174,7 +177,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
                             padding: EdgeInsets.symmetric(vertical: 16),
                             child: Center(
                               child: Text(
-                                'Tidak ada jadwal mendatang',
+                                'Belum ada jadwal nih',
                                 style: TextStyle(color: AppColors.muted),
                               ),
                             ),
@@ -189,7 +192,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
 
                         const SizedBox(height: 20),
 
-                        // Akses cepat
+                        // menu buat buka wirid atau quran
                         const Text(
                           'Akses Cepat',
                           style: TextStyle(
@@ -219,7 +222,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
                                 Icons.import_contacts_rounded,
                                 'Al-Quran',
                                 () {
-                                  // Buka URL quran.kemenag.go.id di browser
+                                  // nanti ini ngarahin ke web quran kemenag
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
@@ -237,7 +240,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
                     ),
             ),
 
-            // Bottom navigation bar
+            // navigasi tab di bagian bawah
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -259,7 +262,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
     );
   }
 
-  // Kartu highlight jadwal hari ini (warna hijau muda)
+  // widget buat kotak jadwal hari ini yang warnanya ijo muda
   Widget _buildHighlightCard(JadwalModel jadwal) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -272,7 +275,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'ADA JADWAL UNTUK ANDA HARI INI',
+            'HARI INI ADA KAJIAN LHO!',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -314,24 +317,13 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
     );
   }
 
-  // Kartu satu jadwal
+  // widget buat kotak list jadwal biasa
   Widget _buildSchedCard(JadwalModel jadwal) {
     final parts = jadwal.tanggal.split('-');
     final hari = parts.length >= 3 ? parts[2] : jadwal.tanggal;
     final bulanList = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agt',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     final bulanIndex = parts.length >= 2 ? int.tryParse(parts[1]) ?? 0 : 0;
     final bulan = bulanIndex > 0 && bulanIndex < 13
@@ -347,7 +339,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
       ),
       child: Row(
         children: [
-          // Kotak tanggal
+          // kotak penanda tanggal di samping kiri
           Container(
             width: 44,
             height: 50,
@@ -379,6 +371,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
             ),
           ),
           const SizedBox(width: 12),
+          // isi detail kajiannya
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,7 +406,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
     );
   }
 
-  // Tombol akses cepat (Wirid, Quran)
+  // widget buat tombol menu wirid/quran
   Widget _buildQuickBtn(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -451,7 +444,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
     );
   }
 
-  // Item navigasi bawah
+  // widget buat item menu di bawah (navigation bar)
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isActive = _currentIndex == index;
     return Expanded(

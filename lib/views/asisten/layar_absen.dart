@@ -6,7 +6,7 @@ import '../../models/model_jamaah.dart';
 import '../../models/model_jadwal.dart';
 import '../../controllers/login_controller.dart';
 
-// Layar input absensi jamaah untuk jadwal tertentu
+// layar buat asisten input siapa aja jamaah yang dateng pas kajian
 class LayarAbsen extends StatefulWidget {
   final int idKelas;
   const LayarAbsen({super.key, required this.idKelas});
@@ -19,23 +19,25 @@ class _LayarAbsenState extends State<LayarAbsen> {
   final AsistenController _controller = AsistenController();
   final LoginController _loginController = LoginController();
 
-  List<JadwalModel> _jadwal = []; // Daftar jadwal kelas ini
-  List<JamaahModel> _students = []; // Daftar jamaah kelas ini
-  // Map: id_jamaah -> status_hadir ('Hadir', 'Alpa', 'Izin', 'Sakit')
+  List<JadwalModel> _jadwal = []; // barisan jadwal buat kelas ini
+  List<JamaahModel> _students = []; // daftar jamaah yang ada di kelas ini
+  // map buat nyimpen status tiap jamaah: id_jamaah -> 'Hadir', 'Alpa', dsb
   final Map<int, String> _absenStatus = {};
 
-  JadwalModel? _selectedJadwal; // Jadwal yang sedang dipilih
+  JadwalModel? _selectedJadwal; // jadwal mana nih yang lagi diabsenin
   bool _isLoading = true;
   bool _isSaving = false;
 
-  // Untuk kotak pencarian nama jamaah
+  // buat nyaring nama jamaah kalo daftar-nya kepanjangan
   final TextEditingController _cariCtrl = TextEditingController();
   List<JamaahModel> _studentsTampil = [];
 
   @override
   void initState() {
     super.initState();
+    // pas buka layar langsung loading data-datanya
     _loadData();
+    // mantau kalo ada yang ngetik di kotak cari
     _cariCtrl.addListener(_filterStudents);
   }
 
@@ -45,11 +47,12 @@ class _LayarAbsenState extends State<LayarAbsen> {
     super.dispose();
   }
 
+  // fungsi buat tarik data asisten, jadwal, sama list jamaah sekaligus
   void _loadData() async {
     final user = await _loginController.getCurrentUser();
     if (user != null) {
       final semuaJadwal = await _controller.getMySchedules(user.idUser!);
-      // Filter hanya jadwal milik kelas ini
+      // cuma ambil jadwal yang emang buat kelas ini ya
       final jadwalKelas = semuaJadwal.where((j) => j.idKelas == widget.idKelas).toList();
       final students = await _controller.getJamaahForClass(widget.idKelas);
 
@@ -57,7 +60,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
         _jadwal = jadwalKelas;
         _students = students;
         _studentsTampil = students;
-        // Default semua jamaah: Hadir
+        // seting awal semuanya gue anggep 'Hadir' dulu biar cepet asistennya
         for (var s in students) {
           _absenStatus[s.idJamaah!] = 'Hadir';
         }
@@ -65,14 +68,14 @@ class _LayarAbsenState extends State<LayarAbsen> {
         _isLoading = false;
       });
 
-      // Kalau ada jadwal terpilih, coba load absensi yang sudah ada
+      // kalo ada jadwal, coba cek apa udah pernah diabsen sebelumnya
       if (_jadwal.isNotEmpty) {
         _loadExistingAbsen(_jadwal.first.idJadwal!);
       }
     }
   }
 
-  // Load absensi yang sudah pernah disimpan sebelumnya
+  // kalo ternyata udah pernah diinput absennya, gue tampilin lagi datanya
   void _loadExistingAbsen(int idJadwal) async {
     final records = await _controller.getAttendanceRecords(idJadwal);
     if (records.isNotEmpty) {
@@ -84,7 +87,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
     }
   }
 
-  // Filter tampilan jamaah berdasarkan pencarian nama
+  // fungsi pas asisten nyari nama jamaah di kotak pencarian
   void _filterStudents() {
     final kata = _cariCtrl.text.toLowerCase();
     setState(() {
@@ -98,8 +101,9 @@ class _LayarAbsenState extends State<LayarAbsen> {
     });
   }
 
-  // Simpan semua absensi ke database
+  // fungsi pas asisten pencet tombol simpan semua absen
   void _handleSave() async {
+    // pastiin pilih jadwalnya dulu ya
     if (_selectedJadwal == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pilih jadwal terlebih dahulu')),
@@ -109,7 +113,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
 
     setState(() => _isSaving = true);
 
-    // Buat batch data dari semua jamaah
+    // bungkus data absen semua jamaah jadi satu list buat dikirim ke controller
     final List<Map<String, dynamic>> batch = _students.map((s) {
       return {
         'id_jamaah': s.idJamaah,
@@ -142,14 +146,13 @@ class _LayarAbsenState extends State<LayarAbsen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Header: pilih jadwal dan cari nama
+                // bagian pilih jadwal sama kotak cari di atas
                 Container(
                   padding: const EdgeInsets.all(16),
                   color: AppColors.background,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Dropdown pilih jadwal
                       const Text(
                         'Pilih Jadwal Pertemuan',
                         style: TextStyle(
@@ -159,6 +162,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      // kalo jadwal belum ada, ingetin asistennya
                       _jadwal.isEmpty
                           ? const Text(
                               'Belum ada jadwal. Buat jadwal dulu di menu Kelola Jadwal.',
@@ -188,18 +192,18 @@ class _LayarAbsenState extends State<LayarAbsen> {
                                 onChanged: (val) {
                                   setState(() {
                                     _selectedJadwal = val;
-                                    // Reset status ke default Hadir
+                                    // balikin lagi ke settingan awal (Hadir)
                                     for (var s in _students) {
                                       _absenStatus[s.idJamaah!] = 'Hadir';
                                     }
                                   });
-                                  // Load absensi yang sudah ada untuk jadwal baru
+                                  // kalo ganti jadwal, liat apa jadwal ini udah pernah diabsen belom
                                   if (val != null) _loadExistingAbsen(val.idJadwal!);
                                 },
                               ),
                             ),
                       const SizedBox(height: 12),
-                      // Kotak pencarian nama
+                      // kotak buat asisten cari nama jamaah
                       TextField(
                         controller: _cariCtrl,
                         decoration: InputDecoration(
@@ -222,7 +226,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
                   ),
                 ),
 
-                // Counter jamaah hadir
+                // buat nampilin total berapa orang yang hadir
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   color: AppColors.primaryLight,
@@ -240,7 +244,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
                   ),
                 ),
 
-                // Daftar nama jamaah + status absen
+                // list daftar jamaah buat diabsen satu-satu
                 Expanded(
                   child: _students.isEmpty
                       ? const Center(
@@ -260,6 +264,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
                             final statusSaat = _absenStatus[s.idJamaah] ?? 'Hadir';
 
                             return ListTile(
+                              // buletan inisial jamaah
                               leading: CircleAvatar(
                                 backgroundColor: _getAvatarColor(statusSaat),
                                 child: Text(
@@ -275,10 +280,10 @@ class _LayarAbsenState extends State<LayarAbsen> {
                                 style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                               subtitle: Text(
-                                s.noHp ?? 'Tidak ada nomor HP',
+                                s.noHp ?? 'Gak ada nomor HP',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              // Dropdown pilih status hadir
+                              // milih status (hadir, alpa, izin, sakit) pake dropdown kecil
                               trailing: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8),
                                 decoration: BoxDecoration(
@@ -310,7 +315,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
                         ),
                 ),
 
-                // Tombol simpan
+                // tombol buat nge-save semua data absen ke database
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: TombolUtama(
@@ -324,7 +329,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
     );
   }
 
-  // Warna avatar berdasarkan status
+  // fungsi buat nentuin warna buletan sesuai statusnya
   Color _getAvatarColor(String status) {
     switch (status) {
       case 'Hadir':
@@ -340,7 +345,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
     }
   }
 
-  // Warna background dropdown status
+  // fungsi buat nentuin warna background kotak status
   Color _getStatusBgColor(String status) {
     switch (status) {
       case 'Hadir':
@@ -356,7 +361,7 @@ class _LayarAbsenState extends State<LayarAbsen> {
     }
   }
 
-  // Warna teks status
+  // fungsi buat nentuin warna teks status biar jelas dibaca
   Color _getStatusTextColor(String status) {
     switch (status) {
       case 'Hadir':

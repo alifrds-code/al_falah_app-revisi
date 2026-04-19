@@ -9,6 +9,7 @@ import '../auth/splash_screen.dart';
 import 'kelola_jadwal.dart';
 import 'layar_absen.dart';
 
+// dashboard buat asisten atau pengelola kelas kalo udah login
 class BerandaAsisten extends StatefulWidget {
   const BerandaAsisten({super.key});
 
@@ -26,12 +27,14 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
   @override
   void initState() {
     super.initState();
+    // pas buka halaman langsung tarik data user sama daftar kelasnya
     _loadData();
   }
 
+  // fungsi buat ambil data user yang login sama kelas-kelas yang ada
   void _loadData() async {
     final user = await _loginController.getCurrentUser();
-    final classes = await _adminController.getClasses(); // Simple: show all classes for now
+    final classes = await _adminController.getClasses(); // gue tampilin semua kelas dulu ya biar gampang
     setState(() {
       _user = user;
       _classes = classes;
@@ -39,6 +42,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
     });
   }
 
+  // fungsi pas asisten mau logout, bersihin session terus balik ke splash
   void _handleLogout() async {
     await _loginController.logout();
     if (mounted) {
@@ -57,7 +61,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom AppBar
+            // bagian kepala dashboard warna hijau
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
               color: AppColors.primary,
@@ -84,6 +88,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
                       ),
                     ],
                   ),
+                  // tombol logout di pojok kanan atas
                   IconButton(
                     onPressed: _handleLogout,
                     icon: const Icon(Icons.logout_rounded, color: Colors.white),
@@ -92,7 +97,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
               ),
             ),
 
-            // Content
+            // bagian isi list kelasnya
             Expanded(
               child: _isLoading 
                 ? const Center(child: CircularProgressIndicator())
@@ -109,6 +114,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
                   ),
                   const SizedBox(height: 12),
                   
+                  // kalo belum ada kelas dari admin, kasih tau
                   if (_classes.isEmpty)
                     const Center(child: Text('Belum ada kelas yang dibuat oleh Admin'))
                   else
@@ -127,6 +133,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
     );
   }
 
+  // widget buat bikin kotak kelasnya
   Widget _buildClassCard(BuildContext context, KelasModel kelas) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -146,6 +153,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
         children: [
           Row(
             children: [
+              // ikon topi wisuda/sekolah
               Container(
                 width: 50,
                 height: 50,
@@ -183,8 +191,10 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 16),
+          // barisan tombol buat milih mau jadwal atau absen
           Row(
             children: [
+              // tombol buat ngatur jadwal kajian
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
@@ -206,6 +216,7 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
                 ),
               ),
               const SizedBox(width: 12),
+              // tombol buat mulai absensi jamaah
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {

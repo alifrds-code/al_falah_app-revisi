@@ -1,4 +1,4 @@
-// Cetakan data pengumuman
+// ini cetakan buat data pengumuman yayasan
 class PengumumanModel {
   final int? idPengumuman;
   final String judul;
@@ -12,6 +12,7 @@ class PengumumanModel {
     required this.tanggalPost,
   });
 
+  // ngerubah data dari database jadi objek biar gampang dipake di flutter
   factory PengumumanModel.fromMap(Map<String, dynamic> map) {
     return PengumumanModel(
       idPengumuman: map['id_pengumuman'],
@@ -21,6 +22,7 @@ class PengumumanModel {
     );
   }
 
+  // ngerubah objek balik jadi map biar bisa disimpen
   Map<String, dynamic> toMap() {
     return {
       'id_pengumuman': idPengumuman,

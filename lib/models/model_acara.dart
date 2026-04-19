@@ -1,3 +1,4 @@
+// ini cetakan buat data acara atau agenda besar di yayasan
 class AcaraModel {
   final int? idAcara;
   final String namaAcara;
@@ -6,7 +7,7 @@ class AcaraModel {
   final String waktu;
   final String lokasi;
   final String namaPemateri;
-  final String? fotoPoster;
+  final String? fotoPoster; // ini isinya path ke file gambar di hp
 
   AcaraModel({
     this.idAcara,
@@ -19,6 +20,7 @@ class AcaraModel {
     this.fotoPoster,
   });
 
+  // fungsi buat ngerubah data dari database jadi objek acara biar enak dipakenya
   factory AcaraModel.fromMap(Map<String, dynamic> map) {
     return AcaraModel(
       idAcara: map['id_acara'],
@@ -32,6 +34,7 @@ class AcaraModel {
     );
   }
 
+  // fungsi buat ngerubah objek acara balik jadi map biar bisa disimpen deui ke database
   Map<String, dynamic> toMap() {
     return {
       'id_acara': idAcara,

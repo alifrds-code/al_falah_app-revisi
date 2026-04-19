@@ -5,6 +5,7 @@ import '../../widgets/form_isian.dart';
 import '../../controllers/admin_controller.dart';
 import '../../models/model_user.dart';
 
+// halaman buat si admin ngatur-ngatur akun asisten
 class KelolaAsisten extends StatefulWidget {
   const KelolaAsisten({super.key});
 
@@ -17,6 +18,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
   List<UserModel> _asistens = [];
   bool _isLoading = true;
 
+  // controller buat kotak inputan (form)
   final TextEditingController _namaCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
@@ -24,9 +26,11 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
   @override
   void initState() {
     super.initState();
+    // pas pertama masuk, langsung gue tarik daftar asistennya
     _loadData();
   }
 
+  // fungsi buat minta data asisten ke controller
   void _loadData() async {
     final data = await _controller.getAsistens();
     setState(() {
@@ -35,7 +39,9 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
     });
   }
 
+  // fungsi pas admin mau nambah asisten baru
   void _handleAdd() async {
+    // pastiin semua kotak udah diisi dulu ya
     if (_namaCtrl.text.isEmpty || _emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) return;
 
     final newUser = UserModel(
@@ -46,22 +52,25 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
     );
 
     await _controller.addAsisten(newUser);
+    
+    // kalo udah sukses, gue bersihin kotak inputannya
     _namaCtrl.clear();
     _emailCtrl.clear();
     _passCtrl.clear();
 
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup form popup
+      _loadData(); // refresh list-nya biar keliatan asisten barunya
     }
   }
 
+  // buat nanya dulu ke admin beneran mau hapus apa enggak
   void _confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Akun?'),
-        content: const Text('Tindakan ini tidak dapat dibatalkan. Menghapus asisten juga akan menghapus data terkait mereka.'),
+        content: const Text('Tidakan ini gak bisa dibatalin ya. Kalo dihapus, data asisten ini bakalan ilang semua.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           TextButton(
@@ -101,6 +110,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                     return _buildAsistenCard(a);
                   },
                 ),
+      // tombol melayang buat nambah asisten
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddForm(context),
         backgroundColor: AppColors.primary,
@@ -109,6 +119,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
     );
   }
 
+  // desain kotak list per asistennya
   Widget _buildAsistenCard(UserModel user) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -120,6 +131,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
       ),
       child: Row(
         children: [
+          // buletan inisial nama
           CircleAvatar(
             backgroundColor: AppColors.primaryLight,
             radius: 24,
@@ -136,6 +148,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
               ],
             ),
           ),
+          // tombol buat delete asisten
           IconButton(
             onPressed: () => _confirmDelete(user.idUser!),
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.red),
@@ -145,6 +158,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
     );
   }
 
+  // form popup buat input data asisten baru
   void _showAddForm(BuildContext context) {
     showModalBottomSheet(
       context: context,

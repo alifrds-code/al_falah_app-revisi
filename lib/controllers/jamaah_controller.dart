@@ -4,51 +4,88 @@ import '../models/model_pengumuman.dart';
 import '../models/model_acara.dart';
 import '../services/local_storage_service.dart';
 
-// Otak logika untuk layar publik jamaah (tanpa login)
+// ini controller buat layar jamaah yang biasa, yang gak butuh login
 class JamaahController {
-  // Ambil id kelas yang dipilih jamaah dari memori HP
+  // buat ambil ID kelas apa aja yang udah dipilih jamaah di HP-nya
   Future<List<int>> getSelectedClassIds() async {
     return await LocalStorageService.getSelectedClasses();
   }
 
-  // Ambil semua jadwal kelas yang dipilih jamaah
+  // buat ambil semua jadwal kajian buat kelas yang dipili jamaah
   Future<List<JadwalModel>> getMySchedules() async {
     final ids = await LocalStorageService.getSelectedClasses();
+    final db = await DBHelper.db();
+    
+    List<Map<String, dynamic>> data;
     if (ids.isEmpty) {
-      // Kalau belum pilih kelas, tampilkan semua jadwal
-      final semua = await DBHelper.getJadwalByKelas([]);
-      if (semua.isEmpty) return [];
+      // kalo belum pilih kelas, ya udah gue tampilin semua aja deh
+      data = await db.rawQuery('''
+        SELECT j.*, k.nama_kelas 
+        FROM tb_jadwal j 
+        JOIN tb_kelas k ON j.id_kelas = k.id_kelas 
+        ORDER BY j.tanggal ASC, j.waktu_mulai ASC
+      ''');
+    } else {
+      // kalo udah pilih, gue filter jadwalnya biar sesuai pilihan jamaah
+      String placeholders = List.filled(ids.length, '?').join(',');
+      data = await db.rawQuery('''
+        SELECT j.*, k.nama_kelas 
+        FROM tb_jadwal j 
+        JOIN tb_kelas k ON j.id_kelas = k.id_kelas 
+        WHERE j.id_kelas IN ($placeholders)
+        ORDER BY j.tanggal ASC, j.waktu_mulai ASC
+      ''', ids);
     }
-    final data = await DBHelper.getJadwalByKelas(ids.isEmpty ? [] : ids);
+    
     return data.map((e) => JadwalModel.fromMap(e)).toList();
   }
 
-  // Ambil jadwal hari ini saja (untuk highlight di beranda)
+  // buat ambil jadwal khusus hari ini aja buat dipajang di depan
   Future<List<JadwalModel>> getTodayHighlights() async {
     final ids = await LocalStorageService.getSelectedClasses();
-    final today = DateTime.now().toIso8601String().split('T')[0]; // format: 2026-04-20
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    final db = await DBHelper.db();
 
     List<Map<String, dynamic>> data;
     if (ids.isEmpty) {
-      data = await DBHelper.getJadwalByKelas([]);
+      data = await db.rawQuery('''
+        SELECT j.*, k.nama_kelas 
+        FROM tb_jadwal j 
+        JOIN tb_kelas k ON j.id_kelas = k.id_kelas 
+        WHERE j.tanggal = ?
+        ORDER BY j.waktu_mulai ASC
+      ''', [today]);
     } else {
-      data = await DBHelper.getJadwalByKelas(ids);
+      String placeholders = List.filled(ids.length, '?').join(',');
+      data = await db.rawQuery('''
+        SELECT j.*, k.nama_kelas 
+        FROM tb_jadwal j 
+        JOIN tb_kelas k ON j.id_kelas = k.id_kelas 
+        WHERE j.tanggal = ? AND j.id_kelas IN ($placeholders)
+        ORDER BY j.waktu_mulai ASC
+      ''', [today, ...ids]);
     }
 
-    // Filter hanya yang tanggalnya hari ini
-    final todayList = data.where((j) => (j['tanggal'] as String) == today).toList();
-    return todayList.map((e) => JadwalModel.fromMap(e)).toList();
+    return data.map((e) => JadwalModel.fromMap(e)).toList();
   }
 
-  // Ambil semua pengumuman
+  // buat ambil daftar pengumuman biar jamaah gak ketinggalan info
   Future<List<PengumumanModel>> getPengumuman() async {
-    final data = await DBHelper.getAllPengumuman();
+    final db = await DBHelper.db();
+    final data = await db.query('tb_pengumuman', orderBy: 'tanggal_post DESC');
     return data.map((e) => PengumumanModel.fromMap(e)).toList();
   }
 
-  // Ambil semua acara
+  // buat ambil info acara yayasan yang mau diadain
   Future<List<AcaraModel>> getAcara() async {
-    final data = await DBHelper.getAllAcara();
+    final db = await DBHelper.db();
+    final data = await db.query('tb_acara', orderBy: 'tanggal_acara ASC');
     return data.map((e) => AcaraModel.fromMap(e)).toList();
+  }
+
+  // buat ambil daftar semua kelas biar jamaah bisa milih pas awal buka app
+  Future<List<Map<String, dynamic>>> getAllKelas() async {
+    final db = await DBHelper.db();
+    return await db.query('tb_kelas', orderBy: 'nama_kelas ASC');
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:al_falah_app/views/auth/splash_screen.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 
+// ini fungsi utama yang pertama kali dipanggil pas aplikasi dinyalain
 void main() {
   runApp(const MyApp());
 }
@@ -12,10 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, // buang tulisan 'debug' di pojok kanan atas biar cakep
       title: "Ta'lim Al Falah",
       theme: ThemeData(
-        fontFamily: 'Inter', // Assuming standard system font for now
+        fontFamily: 'Inter', // gue pake font Inter biar tampilannya modern
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColors.primaryDark,
         ),
       ),
+      // halaman pertama yang muncul itu splash screen
       home: const SplashScreen(),
     );
   }

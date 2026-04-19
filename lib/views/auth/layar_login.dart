@@ -6,6 +6,7 @@ import '../../controllers/login_controller.dart';
 import '../asisten/beranda_asisten.dart';
 import '../admin/beranda_admin.dart';
 
+// layar buat login pengurus yayasan
 class LayarLogin extends StatefulWidget {
   const LayarLogin({super.key});
 
@@ -19,10 +20,12 @@ class _LayarLoginState extends State<LayarLogin> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  // fungsi pas tombol login dipencet, gue cek dulu email pass-nya
   void _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
+    // kalo kosong ya gak usah diproses lah ya
     if (email.isEmpty || password.isEmpty) return;
 
     setState(() => _isLoading = true);
@@ -31,6 +34,7 @@ class _LayarLoginState extends State<LayarLogin> {
       final user = await _controller.login(email, password);
       if (user != null) {
         if (mounted) {
+          // kalo admin arahin ke dashboard admin, kalo asisten ya ke punya asisten
           if (user.role == 'admin') {
             Navigator.pushAndRemoveUntil(
               context,
@@ -46,6 +50,7 @@ class _LayarLoginState extends State<LayarLogin> {
           }
         }
       } else {
+        // kalo gak ketemu datanya, munculin pesan error aja
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Email atau password salah')),
@@ -63,6 +68,7 @@ class _LayarLoginState extends State<LayarLogin> {
     }
   }
 
+  // kalo user lupa password, kasih tau suruh hubungi admin pusat
   void _showForgotPassword() {
     showDialog(
       context: context,
@@ -89,7 +95,7 @@ class _LayarLoginState extends State<LayarLogin> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header Image / Logo Section
+            // bagian kepala yang ada warna hijaunya
             Container(
               height: 300,
               width: double.infinity,
@@ -103,6 +109,7 @@ class _LayarLoginState extends State<LayarLogin> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // buletan logo AF itu
                   Container(
                     width: 80,
                     height: 80,
@@ -142,7 +149,7 @@ class _LayarLoginState extends State<LayarLogin> {
               ),
             ),
 
-            // Form Section
+            // bagian kotak inputan (form)
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -163,6 +170,7 @@ class _LayarLoginState extends State<LayarLogin> {
                     prefixIcon: Icons.lock_outline,
                   ),
                   const SizedBox(height: 12),
+                  // tombol lupa password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -177,6 +185,7 @@ class _LayarLoginState extends State<LayarLogin> {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  // kalo lagi loading munculin muter-muter, kalo enggak munculin tombolnya
                   if (_isLoading)
                     const CircularProgressIndicator()
                   else
@@ -185,6 +194,7 @@ class _LayarLoginState extends State<LayarLogin> {
                       onPressed: _handleLogin,
                     ),
                   const SizedBox(height: 40),
+                  // tombol buat balik ke halaman depan jamaah
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text(

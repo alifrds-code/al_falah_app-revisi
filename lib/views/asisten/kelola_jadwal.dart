@@ -8,7 +8,7 @@ import '../../controllers/asisten_controller.dart';
 import '../../controllers/login_controller.dart';
 import '../../models/model_jadwal.dart';
 
-// Layar kelola jadwal pertemuan oleh Asisten
+// layar buat asisten ngatur jadwal pertemuan/kajian di kelasnya
 class KelolaJadwal extends StatefulWidget {
   final int idKelas;
   const KelolaJadwal({super.key, required this.idKelas});
@@ -23,7 +23,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
   List<JadwalModel> _jadwal = [];
   bool _isLoading = true;
 
-  // Controller untuk form tambah/edit jadwal
+  // controller buat nyimpen ketikan di kotak form
   final TextEditingController _materiCtrl = TextEditingController();
   final TextEditingController _pemateriCtrl = TextEditingController();
   final TextEditingController _tanggalCtrl = TextEditingController();
@@ -34,6 +34,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
   @override
   void initState() {
     super.initState();
+    // pas buka layar langsung tarik datanya deh
     _loadData();
   }
 
@@ -48,19 +49,20 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
     super.dispose();
   }
 
+  // fungsi buat ambil data jadwal khusus punya asisten yang lagi login
   void _loadData() async {
     final user = await _loginController.getCurrentUser();
     if (user != null) {
       final data = await _controller.getMySchedules(user.idUser!);
       setState(() {
-        // Tampilkan hanya jadwal milik kelas ini
+        // cuma nampilin jadwal yang id kelasnya sama kayak yang lagi dibuka
         _jadwal = data.where((j) => j.idKelas == widget.idKelas).toList();
         _isLoading = false;
       });
     }
   }
 
-  // Bersihkan semua input form
+  // bersihin semua kotak inputan biar gak nempel data lama
   void _clearForm() {
     _materiCtrl.clear();
     _pemateriCtrl.clear();
@@ -70,8 +72,9 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
     _alasanCtrl.clear();
   }
 
-  // Simpan jadwal baru
+  // fungsi pas asisten pencet tombol simpan jadwal baru
   void _handleSave() async {
+    // tanggal sama materi itu penting banget, jangan lupa diisi
     if (_tanggalCtrl.text.isEmpty || _pemateriCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tanggal dan nama pemateri wajib diisi')),
@@ -90,28 +93,28 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
       tanggal: _tanggalCtrl.text.trim(),
       waktuMulai: _mulaiCtrl.text.trim(),
       waktuSelesai: _selesaiCtrl.text.trim(),
-      statusJadwal: 'Sesuai Jadwal', // Default status baru
+      statusJadwal: 'Sesuai Jadwal', // status default-nya ini
     );
 
     await _controller.createSchedule(jadwalBaru);
     _clearForm();
 
     if (mounted) {
-      Navigator.pop(context);
-      _loadData();
+      Navigator.pop(context); // tutup form popup-nya
+      _loadData(); // refresh list biodata jadwalnya
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Jadwal berhasil ditambahkan!')),
       );
     }
   }
 
-  // Hapus jadwal setelah konfirmasi
+  // nanya dulu beneran mau hapus jadwal apa enggak (ati-ati ini!)
   void _confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Hapus Jadwal?'),
-        content: const Text('Jadwal ini beserta data absensinya akan terhapus.'),
+        content: const Text('Wah, kalo ini dihapus, data absensinya juga ikutan ilang ya.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -132,7 +135,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
     );
   }
 
-  // Ubah status jadwal (Ditunda atau Dibatalkan)
+  // popup buat ganti status jadwal kalo tiba-tiba gak jadi atau telat
   void _showChangeStatus(JadwalModel jadwal) {
     _alasanCtrl.clear();
     String statusBaru = 'Ditunda';
@@ -146,7 +149,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Pilih status baru
+              // milih status barunya (ditunda atau batal)
               RadioListTile<String>(
                 title: const Text('Ditunda'),
                 value: 'Ditunda',
@@ -162,7 +165,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                 activeColor: AppColors.red,
               ),
               const SizedBox(height: 8),
-              // Input alasan
+              // kotak buat nulis alasannya biar jamaah gak bingung
               TextField(
                 controller: _alasanCtrl,
                 decoration: const InputDecoration(
@@ -212,7 +215,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
           ? const Center(child: CircularProgressIndicator())
           : _jadwal.isEmpty
               ? const TampilanKosong(
-                  pesan: 'Belum ada jadwal.\nTekan + untuk membuat jadwal baru.',
+                  pesan: 'Belum ada jadwal nih.\nPencet tombol + buat bikin jadwal baru.',
                   icon: Icons.event_note_rounded,
                 )
               : RefreshIndicator(
@@ -226,6 +229,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                     },
                   ),
                 ),
+      // tombol plus melayang buat nambah jadwal baru
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showFormJadwal(context),
         backgroundColor: AppColors.primary,
@@ -234,7 +238,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
     );
   }
 
-  // Kartu satu jadwal
+  // widget buat bikin kotak kartu jadwalnya
   Widget _buildJadwalCard(JadwalModel jadwal) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -254,13 +258,13 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Tanggal
+                    // nampilin tanggal acaranya
                     Text(
                       jadwal.tanggal,
                       style: const TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
                     const SizedBox(height: 4),
-                    // Pemateri
+                    // nampilin siapa pematerinya
                     Text(
                       jadwal.namaPemateri,
                       style: const TextStyle(
@@ -269,12 +273,12 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                         color: AppColors.text,
                       ),
                     ),
-                    // Materi
+                    // nampilin materi yang mau dibahas kalau ada
                     Text(
                       jadwal.materiPembahasan ?? 'Kajian Rutin',
                       style: const TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
-                    // Jam
+                    // nampilin range jamnya
                     Text(
                       '${jadwal.waktuMulai} - ${jadwal.waktuSelesai}',
                       style: const TextStyle(fontSize: 12, color: AppColors.muted),
@@ -282,11 +286,12 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                   ],
                 ),
               ),
+              // label status (sesuai jadwal/ditunda/batal)
               LabelStatus(status: jadwal.statusJadwal),
             ],
           ),
 
-          // Tampilkan alasan kalau ada
+          // munculin alasan penundaan kalo emang lagi ditunda
           if (jadwal.alasanPerubahan != null && jadwal.alasanPerubahan!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
@@ -306,10 +311,10 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
           const Divider(height: 1),
           const SizedBox(height: 8),
 
-          // Tombol aksi
+          // deretan tombol aksi di bawah kartu
           Row(
             children: [
-              // Ubah status
+              // tombol buat ganti status kaget (misal ujan jadi ditunda)
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _showChangeStatus(jadwal),
@@ -323,7 +328,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Hapus
+              // tombol buat hapus jadwal kalo salah ketik atau gimana
               OutlinedButton.icon(
                 onPressed: () => _confirmDelete(jadwal.idJadwal!),
                 icon: const Icon(Icons.delete_outline_rounded, size: 16),
@@ -341,7 +346,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
     );
   }
 
-  // Form tambah jadwal baru (muncul dari bawah)
+  // popup form bwt input jadwal baru, muncul dari bawah layar
   void _showFormJadwal(BuildContext context) {
     _clearForm();
     showModalBottomSheet(
@@ -388,6 +393,7 @@ class _KelolaJadwalState extends State<KelolaJadwal> {
                 controller: _tanggalCtrl,
               ),
               const SizedBox(height: 16),
+              // kotak input jam mulai jam selesai sebelahan
               Row(
                 children: [
                   Expanded(

@@ -5,6 +5,7 @@ import '../../controllers/admin_controller.dart';
 import '../../controllers/laporan_controller.dart';
 import '../../models/model_kelas.dart';
 
+// layar buat admin download laporan absen jadi file csv (excel)
 class LaporanAbsensi extends StatefulWidget {
   const LaporanAbsensi({super.key});
 
@@ -18,16 +19,18 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
   
   List<KelasModel> _classes = [];
   KelasModel? _selectedKelas;
-  String _selectedMonth = "2025-04"; // Default
+  String _selectedMonth = "2025-04"; // default bulan buat laporan
   bool _isLoadingData = true;
   bool _isExporting = false;
 
   @override
   void initState() {
     super.initState();
+    // pas masuk, ambil dulu daftar kelas yang ada buat dipilih
     _loadData();
   }
 
+  // fungsi bwt ambil data kelas biar admin milih mau ekspor kelas mana
   void _loadData() async {
     final classes = await _adminController.getClasses();
     setState(() {
@@ -37,11 +40,13 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
     });
   }
 
+  // fungsi pas admin pencet tombol ekspor csv
   void _handleExport() async {
     if (_selectedKelas == null) return;
 
     setState(() => _isExporting = true);
     
+    // minta controller bwt bikinin filenya
     final path = await _laporanController.exportAttendanceToCSV(
       _selectedKelas!.idKelas!,
       _selectedKelas!.namaKelas,
@@ -52,6 +57,7 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
 
     if (mounted) {
       if (path != null) {
+        // kalo berhasil, kasih tau lokasi filenya
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -63,6 +69,7 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
           ),
         );
       } else {
+        // kalo gagal (mungkin datanya emang kosong)
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gagal mengekspor data atau data kosong')),
         );
@@ -89,10 +96,10 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
                 children: [
                   const Text('Pilih Parameter Laporan', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Data akan dikonversi menjadi file CSV yang dapat dibuka di MS Excel.', style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                  const Text('Data bakal dirubah jadi file CSV biar bisa dibuka di Excel.', style: TextStyle(color: AppColors.muted, fontSize: 13)),
                   const SizedBox(height: 32),
                   
-                  // Pick Class
+                  // milih kelas yang mau ditarik datanya
                   const Text('Kelas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 8),
                   Container(
@@ -108,7 +115,7 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Pick Month (Simplified for MVP)
+                  // milih bulannya (ini masih manual dulu ya listnya)
                   const Text('Bulan (Format: YYYY-MM)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 8),
                   Container(
@@ -124,6 +131,7 @@ class _LaporanAbsensiState extends State<LaporanAbsensi> {
                   ),
                   
                   const Spacer(),
+                  // tombol buat mulai proses ekspor
                   if (_isExporting)
                     const Center(child: CircularProgressIndicator())
                   else

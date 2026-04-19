@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
-// Badge warna untuk status jadwal: Hijau/Kuning/Merah
+// ini widget buat nampilin status jadwal pake warna-warni (hijau/kuning/merah)
 class LabelStatus extends StatelessWidget {
   final String status;
 
@@ -9,7 +9,7 @@ class LabelStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Tentukan warna berdasarkan status
+    // nentuin warna sama ikonnya apa berdasarkan status yang dikirim
     Color backgroundColor;
     Color textColor;
     IconData icon;
@@ -23,7 +23,7 @@ class LabelStatus extends StatelessWidget {
       textColor = AppColors.red;
       icon = Icons.cancel_outlined;
     } else {
-      // Default: Sesuai Jadwal
+      // default-nya ya 'Sesuai Jadwal' warna ijo
       backgroundColor = AppColors.primaryLight;
       textColor = AppColors.primary;
       icon = Icons.check_circle_outline_rounded;

@@ -1,48 +1,95 @@
+import 'package:sqflite/sqflite.dart';
 import '../database/sqflite_helper.dart';
 import '../models/model_jadwal.dart';
 import '../models/model_jamaah.dart';
 
-// Otak logika khusus Asisten: kelola jadwal dan absensi
+// ini controller khusus asisten, buat ngatur jadwal sama absensi
 class AsistenController {
-  // Ambil semua jadwal yang dibuat oleh asisten ini
+  
+  // ambil semua jadwal yang dibikin sama asisten ini
   Future<List<JadwalModel>> getMySchedules(int idUser) async {
-    final data = await DBHelper.getJadwalByAsisten(idUser);
+    final db = await DBHelper.db();
+    final data = await db.rawQuery('''
+      SELECT j.*, k.nama_kelas 
+      FROM tb_jadwal j 
+      JOIN tb_kelas k ON j.id_kelas = k.id_kelas 
+      WHERE j.id_user = ?
+      ORDER BY j.tanggal DESC
+    ''', [idUser]);
     return data.map((e) => JadwalModel.fromMap(e)).toList();
   }
 
-  // Ambil daftar jamaah di kelas tertentu untuk absensi
+  // buat ambil daftar jamaah di kelas tertentu biar asisten bisa absenin
   Future<List<JamaahModel>> getJamaahForClass(int idKelas) async {
-    final data = await DBHelper.getJamaahByKelas(idKelas);
+    final db = await DBHelper.db();
+    final data = await db.query(
+      'tb_jamaah',
+      where: 'id_kelas = ? AND status_jamaah = 1',
+      whereArgs: [idKelas],
+      orderBy: 'nama_lengkap ASC',
+    );
     return data.map((e) => JamaahModel.fromMap(e)).toList();
   }
 
-  // Buat jadwal baru
+  // buat bikin jadwal kajian/ta'lim baru
   Future<void> createSchedule(JadwalModel jadwal) async {
-    await DBHelper.insertJadwal(jadwal.toMap());
+    final db = await DBHelper.db();
+    final data = jadwal.toMap();
+    data.remove('id_jadwal');
+    await db.insert('tb_jadwal', data);
   }
 
-  // Edit jadwal (ubah tanggal, jam, materi)
+  // buat edit jadwal yang udah ada (misal ganti jam atau materi)
   Future<void> updateSchedule(JadwalModel jadwal) async {
-    await DBHelper.updateJadwal(jadwal.idJadwal!, jadwal.toMap());
+    final db = await DBHelper.db();
+    final data = jadwal.toMap();
+    data.remove('id_jadwal');
+    data.remove('nama_kelas');
+    await db.update('tb_jadwal', data, where: 'id_jadwal = ?', whereArgs: [jadwal.idJadwal]);
   }
 
-  // Hapus jadwal
+  // buat hapus jadwal kalo emang gak jadi
   Future<void> deleteSchedule(int idJadwal) async {
-    await DBHelper.deleteJadwal(idJadwal);
+    final db = await DBHelper.db();
+    await db.delete('tb_jadwal', where: 'id_jadwal = ?', whereArgs: [idJadwal]);
   }
 
-  // Ubah status jadwal jadi Ditunda atau Dibatalkan
+  // buat ganti status jadwal, misal jadi ditunda atau dibatalin (ada alasannya juga)
   Future<void> updateScheduleStatus(int idJadwal, String status, String? alasan) async {
-    await DBHelper.updateStatusJadwal(idJadwal, status, alasan);
+    final db = await DBHelper.db();
+    await db.update(
+      'tb_jadwal',
+      {
+        'status_jadwal': status,
+        'alasan_perubahan': alasan,
+      },
+      where: 'id_jadwal = ?',
+      whereArgs: [idJadwal],
+    );
   }
 
-  // Simpan absensi batch (sekaligus banyak jamaah)
+  // buat simpen data absen jamaah sekaligus banyak biar gak capek
   Future<void> saveAttendance(int idJadwal, List<Map<String, dynamic>> batch) async {
-    await DBHelper.recordAbsen(idJadwal, batch);
+    final db = await DBHelper.db();
+    await db.transaction((txn) async {
+      for (var item in batch) {
+        await txn.insert(
+          'tb_absensi',
+          {
+            'id_jadwal': idJadwal,
+            'id_jamaah': item['id_jamaah'],
+            'status_hadir': item['status_hadir'],
+            'waktu_absen': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
-  // Ambil catatan absensi yang sudah ada untuk jadwal tertentu
+  // buat ambil data absen yang udah pernah diinput buat jadwal itu
   Future<List<Map<String, dynamic>>> getAttendanceRecords(int idJadwal) async {
-    return await DBHelper.getAbsensiByJadwal(idJadwal);
+    final db = await DBHelper.db();
+    return await db.query('tb_absensi', where: 'id_jadwal = ?', whereArgs: [idJadwal]);
   }
 }

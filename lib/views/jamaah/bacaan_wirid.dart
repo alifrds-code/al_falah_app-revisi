@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 
-// Note: We might need url_launcher, but for now we follow dummy data rule
-// import 'package:url_launcher/url_launcher.dart'; 
-
+// layar buat jamaah baca doa-doa dzikir atau wirid harian
 class BacaanWirid extends StatelessWidget {
   const BacaanWirid({super.key});
 
@@ -14,7 +12,7 @@ class BacaanWirid extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar
+            // bagian kepala layar (AppBar)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
               color: AppColors.primary,
@@ -36,7 +34,7 @@ class BacaanWirid extends StatelessWidget {
               ),
             ),
 
-            // Content
+            // konten bacaan wiridnya di dalem listview biar bisa di-scroll
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(14),
@@ -70,12 +68,12 @@ class BacaanWirid extends StatelessWidget {
                   const Divider(height: 1, thickness: 0.5),
                   const SizedBox(height: 12),
                   
-                  // Quran Button
+                  // tombol buat buka quran kemenag (siapa tau mau baca lebih banyak)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Dummy: Show snackbar since we haven't integrated url_launcher
+                        // buat sekarang munculin snackbar aja dulu ya
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Membuka Al-Qur\'an Kemenag...')),
                         );
@@ -105,6 +103,7 @@ class BacaanWirid extends StatelessWidget {
     );
   }
 
+  // widget buat bikin satu blok bacaan doa
   Widget _buildWiridSec(String num, String arab, String trl) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -117,6 +116,7 @@ class BacaanWirid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // nomor urut
           Text(
             num,
             style: const TextStyle(
@@ -127,17 +127,19 @@ class BacaanWirid extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
+          // tulisan arabnya (rata kanan)
           Text(
             arab,
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontSize: 26,
               color: AppColors.text,
-              fontFamily: 'Roboto', // Fallback for Arabic
+              fontFamily: 'Roboto', // buat antisipasi font arab
               height: 2.0,
             ),
           ),
           const SizedBox(height: 8),
+          // artinya
           Text(
             trl,
             style: const TextStyle(

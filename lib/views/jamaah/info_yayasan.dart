@@ -6,7 +6,7 @@ import '../../models/model_acara.dart';
 import 'detail_info.dart';
 import 'jadwal_jamaah.dart';
 
-// Layar info yayasan: daftar pengumuman dan kegiatan
+// layar buat jamaah liat info-info penting atau acara yang mau diadain yayasan
 class InfoYayasan extends StatefulWidget {
   const InfoYayasan({super.key});
 
@@ -24,7 +24,9 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+    // bikin tab buat misahin antara pengumuman biasa sama agenda kegiatan
     _tabController = TabController(length: 2, vsync: this);
+    // ambil datanya dari database
     _loadData();
   }
 
@@ -34,6 +36,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     super.dispose();
   }
 
+  // fungsi buat tarik data pengumuman sama acara sekaligus
   void _loadData() async {
     final dataPengumuman = await _controller.getPengumuman();
     final dataAcara = await _controller.getAcara();
@@ -51,7 +54,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
       body: SafeArea(
         child: Column(
           children: [
-            // Header hijau + TabBar
+            // bagian kepala layar warna hijau, ada tab-nya juga
             Container(
               color: AppColors.primary,
               child: Column(
@@ -84,7 +87,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
               ),
             ),
 
-            // Konten tab
+            // isi kontennya ganti-ganti tergantung tab yang dipilih
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -100,7 +103,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
         ),
       ),
 
-      // Nav bar bawah
+      // menu navigasi di bagian bawah
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -117,11 +120,11 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Tab daftar pengumuman
+  // widget buat nampilin daftar pengumuman
   Widget _buildPengumumanTab() {
     if (_pengumuman.isEmpty) {
       return const Center(
-        child: Text('Belum ada pengumuman', style: TextStyle(color: AppColors.muted)),
+        child: Text('Belum ada pengumuman nih', style: TextStyle(color: AppColors.muted)),
       );
     }
     return ListView.builder(
@@ -142,11 +145,11 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Tab daftar kegiatan/acara
+  // widget buat nampilin daftar kegiatan/agenda
   Widget _buildKegiatanTab() {
     if (_acara.isEmpty) {
       return const Center(
-        child: Text('Belum ada kegiatan mendatang', style: TextStyle(color: AppColors.muted)),
+        child: Text('Belum ada kegiatan buat sekarang', style: TextStyle(color: AppColors.muted)),
       );
     }
     return ListView.builder(
@@ -166,7 +169,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Navigasi ke detail info
+  // fungsi buat pindah ke layar detail pas salah satu info diklik
   void _toDetail(String title, String body, String date) {
     Navigator.push(
       context,
@@ -176,7 +179,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Kartu pengumuman
+  // widget buat kotak satu pengumuman
   Widget _buildInfoCard({
     required String title,
     required String date,
@@ -229,7 +232,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Kartu acara
+  // widget buat kotak satu kegiatan/agenda
   Widget _buildEventCard({
     required String title,
     required String meta,
@@ -247,7 +250,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
         ),
         child: Row(
           children: [
-            // Ikon acara
+            // ikon penanda kegiatan
             Container(
               width: 56,
               height: 56,
@@ -285,7 +288,7 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
     );
   }
 
-  // Item navigasi bawah
+  // buat bikin item navigasi yang ada di bawah layar
   Widget _buildNavItem(
     BuildContext context,
     int index,
@@ -297,8 +300,10 @@ class _InfoYayasanState extends State<InfoYayasan> with SingleTickerProviderStat
       child: InkWell(
         onTap: () {
           if (index == 0) {
+            // balik ke beranda utama
             Navigator.popUntil(context, (route) => route.isFirst);
           } else if (index == 1) {
+            // pindah ke halaman jadwal
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const JadwalJamaah()),
