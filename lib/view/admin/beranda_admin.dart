@@ -86,12 +86,12 @@ class _BerandaAdminState extends State<BerandaAdmin> {
             // HEADER WELCOME SECTION
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
                 ),
               ),
               child: Column(

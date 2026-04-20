@@ -60,21 +60,20 @@ class _TabBerandaAsistenState extends State<TabBerandaAsisten> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // GREETING
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, Color(0xFF1B5E20)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
               ),
-              borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +100,12 @@ class _TabBerandaAsistenState extends State<TabBerandaAsisten> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
 
           // DAFTAR KELAS
           const Text(
@@ -301,6 +305,9 @@ class _TabBerandaAsistenState extends State<TabBerandaAsisten> {
             // This just renders a message if ALL streams are empty for today
             return const SizedBox.shrink();
           }),
+              ],
+            ),
+          ),
         ],
       ),
     );

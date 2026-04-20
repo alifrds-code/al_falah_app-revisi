@@ -240,11 +240,7 @@ class _TabBerandaJamaahState extends State<TabBerandaJamaah> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, Color(0xFF1B5E20)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(28),
                   bottomRight: Radius.circular(28),
