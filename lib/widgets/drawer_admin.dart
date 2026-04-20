@@ -113,9 +113,48 @@ class DrawerAdmin extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            onTap: () async {
-              await LoginController.logout();
-              context.pushAndRemoveAll(const LayarLogin());
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  title: const Text(
+                    'Keluar?',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textHeading),
+                  ),
+                  content: const Text(
+                    'Apakah Anda yakin ingin keluar dari akun ini?',
+                    style: TextStyle(color: AppColors.textBody, fontSize: 14),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'Batal',
+                        style: TextStyle(color: AppColors.textSubtitle, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.danger,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(context); // tutup dialog
+                        await LoginController.logout();
+                        if (context.mounted) {
+                          context.pushAndRemoveAll(const LayarLogin());
+                        }
+                      },
+                      child: const Text(
+                        'Ya, Keluar',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
