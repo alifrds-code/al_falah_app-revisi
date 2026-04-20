@@ -12,6 +12,8 @@ class KelolaJamaah extends StatefulWidget {
 }
 
 class _KelolaJamaahState extends State<KelolaJamaah> {
+  String _searchQuery = '';
+
   // FUNGSI: Pop-up Detail Jamaah
   void _tampilDetailJamaah(BuildContext context, JamaahModel jamaah, Map<String, String> mapKelas) {
     bool isLaki = jamaah.jenisKelamin == 'Laki-laki';
@@ -282,6 +284,11 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
             padding: const EdgeInsets.all(20),
             color: AppColors.surface,
             child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
               decoration: InputDecoration(
                 hintText: 'Cari nama jamaah...',
                 prefixIcon: const Icon(
@@ -340,7 +347,14 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                   );
                 }
 
-                final daftarJamaah = snapshot.data!;
+                final daftarJamaah = snapshot.data!.where((jamaah) {
+                  if (_searchQuery.isEmpty) return true;
+                  return (jamaah['nama_lengkap'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
+                }).toList();
+
+                if (daftarJamaah.isEmpty) {
+                  return const Center(child: Text("Jamaah tidak ditemukan"));
+                }
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(

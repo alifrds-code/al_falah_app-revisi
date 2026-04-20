@@ -14,6 +14,8 @@ class KelolaAsisten extends StatefulWidget {
 }
 
 class _KelolaAsistenState extends State<KelolaAsisten> {
+  String _searchQuery = '';
+
   // FUNGSI 1: Nampilin Pop-up Detail Asisten dari bawah
   void _tampilDetailAsisten(BuildContext context, UserModel asisten) {
     showModalBottomSheet(
@@ -281,6 +283,11 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
             padding: const EdgeInsets.all(20),
             color: AppColors.surface,
             child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
               decoration: InputDecoration(
                 hintText: 'Cari nama asisten...',
                 hintStyle: const TextStyle(
@@ -329,7 +336,14 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                   );
                 }
 
-                final daftarAsisten = snapshot.data!;
+                final daftarAsisten = snapshot.data!.where((asisten) {
+                  if (_searchQuery.isEmpty) return true;
+                  return asisten.nama.toLowerCase().contains(_searchQuery.toLowerCase());
+                }).toList();
+
+                if (daftarAsisten.isEmpty) {
+                  return const Center(child: Text("Asisten tidak ditemukan"));
+                }
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(

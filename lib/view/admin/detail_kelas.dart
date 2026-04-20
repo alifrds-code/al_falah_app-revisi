@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/models/model_user.dart';
+import 'package:al_falah_app/models/model_kelas.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 
 class DetailKelas extends StatefulWidget {
@@ -21,9 +22,92 @@ class _DetailKelasState extends State<DetailKelas> {
     _dataKelas = Map<String, dynamic>.from(widget.kelas);
   }
 
-  Future<List<Map<String, dynamic>>> _loadJamaahKelas() async {
-    return await AdminController.ambilJamaahByKelas(
-      _dataKelas['id'] ?? _dataKelas['id_kelas'],
+  void _tampilEditNamaKelas() {
+    final controller = TextEditingController(text: _dataKelas['nama_kelas']);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Edit Nama Kelas',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textHeading,
+            fontSize: 18,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Masukkan nama kelas baru...',
+            hintStyle: const TextStyle(color: AppColors.textHint, fontSize: 14),
+            filled: true,
+            fillColor: AppColors.background,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Batal',
+              style: TextStyle(
+                color: AppColors.textSubtitle,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () async {
+              final namaBaru = controller.text.trim();
+              if (namaBaru.isEmpty) return;
+
+              Navigator.pop(context);
+
+              final idKelas = _dataKelas['id'] ?? _dataKelas['id_kelas'];
+              await AdminController.updateKelas(
+                idKelas,
+                KelasModel(namaKelas: namaBaru),
+              );
+
+              setState(() {
+                _dataKelas['nama_kelas'] = namaBaru;
+              });
+
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Nama kelas berhasil diubah!'),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            },
+            child: const Text(
+              'Simpan',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -484,8 +568,11 @@ class _DetailKelasState extends State<DetailKelas> {
                   ),
                   const SizedBox(height: 24),
 
-                  FutureBuilder<List<UserModel>>(
-                    future: AdminController.ambilSemuaAsisten(),
+                  FutureBuilder<List<dynamic>>(
+                    future: Future.wait([
+                      AdminController.ambilSemuaAsisten(),
+                      AdminController.ambilSemuaKelas(),
+                    ]),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
@@ -493,7 +580,37 @@ class _DetailKelasState extends State<DetailKelas> {
                         );
                       }
 
-                      final listAsisten = snapshot.data ?? [];
+                      final semuaAsisten = snapshot.data![0] as List<UserModel>;
+                      final semuaKelas = snapshot.data![1] as List<Map<String, dynamic>>;
+
+                      // Ambil semua id_asisten yang sudah terpakai
+                      final Set<String> usedAsistenIds = {};
+                      for (var k in semuaKelas) {
+                        if (k['id_asisten'] != null) {
+                          usedAsistenIds.add(k['id_asisten']);
+                        }
+                      }
+
+                      // Saring asisten yang belum dipakai
+                      final listAsisten = semuaAsisten.where((a) => !usedAsistenIds.contains(a.uid)).toList();
+
+                      if (semuaAsisten.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.dangerLight,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Data asisten kosong!\nSilakan tambah data asisten di menu Kelola Asisten terlebih dahulu.',
+                            style: TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
 
                       if (listAsisten.isEmpty) {
                         return Container(
@@ -503,7 +620,7 @@ class _DetailKelasState extends State<DetailKelas> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
-                            'Data asisten kosong!\nSilakan tambah data asisten di menu Kelola Asisten terlebih dahulu.',
+                            'Semua asisten sudah terhubung dengan kelas lain!\nSilakan tambah asisten baru atau copot asisten dari kelas lain.',
                             style: TextStyle(
                               color: AppColors.danger,
                               fontSize: 12,
@@ -875,6 +992,13 @@ class _DetailKelasState extends State<DetailKelas> {
         backgroundColor: AppColors.surface,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textHeading),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: AppColors.info),
+            tooltip: 'Edit Nama Kelas',
+            onPressed: _tampilEditNamaKelas,
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: AppColors.borderLight, height: 1),
@@ -891,15 +1015,17 @@ class _DetailKelasState extends State<DetailKelas> {
         onPressed: _tampilPopUpPilihJamaah,
       ),
 
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _loadJamaahKelas(),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: AdminController.ambilJamaahByKelasStream(_dataKelas['id'] ?? _dataKelas['id_kelas']),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
-          if (snapshot.hasError)
+          }
+          if (snapshot.hasError) {
             return Center(child: Text('Waduh error: ${snapshot.error}'));
+          }
 
           final daftarJamaah = snapshot.data ?? [];
           final int totalJamaah = daftarJamaah.length;

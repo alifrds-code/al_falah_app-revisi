@@ -14,6 +14,8 @@ class KelolaKelas extends StatefulWidget {
 }
 
 class _KelolaKelasState extends State<KelolaKelas> {
+  String _searchQuery = '';
+
   // FUNGSI 2: Pop-up Konfirmasi Hapus Kelas
   void _konfirmasiHapus(BuildContext context, Map<String, dynamic> kelas) {
     showDialog(
@@ -130,6 +132,11 @@ class _KelolaKelasState extends State<KelolaKelas> {
             padding: const EdgeInsets.all(20),
             color: AppColors.surface,
             child: TextField(
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val;
+                });
+              },
               decoration: InputDecoration(
                 hintText: 'Cari nama kelas...',
                 hintStyle: const TextStyle(
@@ -192,7 +199,14 @@ class _KelolaKelasState extends State<KelolaKelas> {
                   );
                 }
 
-                final daftarKelas = snapshot.data!;
+                final daftarKelas = snapshot.data!.where((kelas) {
+                  if (_searchQuery.isEmpty) return true;
+                  return (kelas['nama_kelas'] ?? '').toLowerCase().contains(_searchQuery.toLowerCase());
+                }).toList();
+
+                if (daftarKelas.isEmpty) {
+                  return const Center(child: Text("Kelas tidak ditemukan"));
+                }
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(
@@ -285,64 +299,24 @@ class _KelolaKelasState extends State<KelolaKelas> {
                             ],
                           ),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // TOMBOL EDIT
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.infoLight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  color: AppColors.info,
-                                  size: 20,
-                                ),
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(8),
-                                onPressed: () async {
-                                  // Buka form edit
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FormKelas(
-                                        kelasLama: {
-                                          ...kelas,
-                                          'id_kelas':
-                                              kelas['id'], // Map id to id_kelas
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                        trailing: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.dangerLight,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.danger,
+                              size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            // ==========================================
-                            // TOMBOL HAPUS (Panggil konfirmasiHapus)
-                            // ==========================================
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.dangerLight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: AppColors.danger,
-                                  size: 20,
-                                ),
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(8),
-                                onPressed: () => _konfirmasiHapus(
-                                  context,
-                                  kelas,
-                                ), // Panggil pop-up ke sini
-                              ),
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(8),
+                            onPressed: () => _konfirmasiHapus(
+                              context,
+                              kelas,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     );

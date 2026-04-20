@@ -11,6 +11,10 @@ class PengumumanController {
     }
   }
 
+  static Stream<List<Map<String, dynamic>>> ambilSemuaPengumumanStream() {
+    return FirebaseService.ambilSemuaPengumumanStream();
+  }
+
   static Future<bool> tambahPengumuman({
     required String judul,
     required String isi,

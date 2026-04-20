@@ -5,6 +5,8 @@ import 'package:al_falah_app/view/auth/layar_login.dart';
 import 'package:al_falah_app/view/admin/kelola_kelas.dart';
 import 'package:al_falah_app/view/admin/kelola_asisten.dart';
 import 'package:al_falah_app/view/admin/kelola_jamaah.dart';
+import 'package:al_falah_app/view/admin/kelola_acara.dart';
+import 'package:al_falah_app/view/admin/kelola_pengumuman.dart';
 import 'package:al_falah_app/utils/app_colors.dart'; // Biar warnanya nyambung
 
 class DrawerAdmin extends StatelessWidget {
@@ -32,10 +34,6 @@ class DrawerAdmin extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             accountEmail: Text(emailUser), // 3. TAMPILIN EMAIL ASLI DI SINI
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 40, color: AppColors.primary),
-            ),
           ),
 
           // Menu-menu (Kodingan bawahnya tetep sama persis)
@@ -81,6 +79,28 @@ class DrawerAdmin extends StatelessWidget {
             onTap: () {
               Navigator.pop(context); // Tutup menu sampingnya dulu
               context.push(const KelolaJamaah()); // Baru pindah halaman
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.event_available, color: AppColors.textBody),
+            title: const Text(
+              'Kelola Acara',
+              style: TextStyle(color: AppColors.textHeading),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              context.push(const KelolaAcara());
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.campaign, color: AppColors.textBody),
+            title: const Text(
+              'Pengumuman',
+              style: TextStyle(color: AppColors.textHeading),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              context.push(const KelolaPengumuman());
             },
           ),
           const Divider(color: AppColors.borderLight),
