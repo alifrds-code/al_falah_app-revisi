@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
@@ -15,7 +16,7 @@ class FirebaseService {
 
   static String _normalisasiEmail(String email) => email.trim().toLowerCase();
 
-  static Future<UserCredential> registerUser({
+  static Future<UserCredential?> registerUser({
     required String email,
     required String password,
     required String nama,
@@ -24,28 +25,39 @@ class FirebaseService {
   }) async {
     final emailFinal = _normalisasiEmail(email);
 
-    final credential = await _auth.createUserWithEmailAndPassword(
-      email: emailFinal,
-      password: password,
+    // Create secondary app to avoid logging out the current user
+    FirebaseApp tempApp = await Firebase.initializeApp(
+      name: 'TempApp_${DateTime.now().millisecondsSinceEpoch}',
+      options: Firebase.app().options,
     );
 
-    final user = credential.user;
-    if (user != null &&
-        (user.displayName == null || user.displayName!.isEmpty)) {
-      await user.updateDisplayName(nama);
-    }
-
-    if (user != null) {
-      await simpanProfilUser(
-        uid: user.uid,
-        nama: nama,
+    try {
+      final credential = await FirebaseAuth.instanceFor(app: tempApp)
+          .createUserWithEmailAndPassword(
         email: emailFinal,
-        role: role,
-        idUser: idUser,
+        password: password,
       );
-    }
 
-    return credential;
+      final user = credential.user;
+      if (user != null &&
+          (user.displayName == null || user.displayName!.isEmpty)) {
+        await user.updateDisplayName(nama);
+      }
+
+      if (user != null) {
+        await simpanProfilUser(
+          uid: user.uid,
+          nama: nama,
+          email: emailFinal,
+          role: role,
+          idUser: idUser,
+        );
+      }
+
+      return credential;
+    } finally {
+      await tempApp.delete();
+    }
   }
 
   static Future<UserCredential> loginUser({

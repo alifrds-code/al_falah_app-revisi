@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
+import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/models/model_jamaah.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/view/admin/form_jamaah.dart';
@@ -13,7 +13,7 @@ class KelolaJamaah extends StatefulWidget {
 
 class _KelolaJamaahState extends State<KelolaJamaah> {
   // FUNGSI: Pop-up Detail Jamaah
-  void _tampilDetailJamaah(BuildContext context, JamaahModel jamaah) {
+  void _tampilDetailJamaah(BuildContext context, JamaahModel jamaah, Map<String, String> mapKelas) {
     bool isLaki = jamaah.jenisKelamin == 'Laki-laki';
 
     showModalBottomSheet(
@@ -73,7 +73,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Kelas: ${jamaah.idKelas ?? 'Belum ada kelas'}',
+                  'Kelas: ${jamaah.idKelas != null ? (mapKelas[jamaah.idKelas] ?? jamaah.idKelas) : 'Belum ada kelas'}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -212,7 +212,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
               onPressed: () async {
               Navigator.pop(context);
               try {
-                await AdminControllerFirebase.hapusJamaah(idJamaah);
+                await AdminController.hapusJamaah(idJamaah);
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
 
@@ -302,14 +302,31 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
 
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: AdminControllerFirebase.ambilSemuaJamaahStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
-                if (snapshot.hasError)
-                  return Center(child: Text('Error: ${snapshot.error}'));
+              stream: AdminController.ambilSemuaKelasStream(),
+              builder: (context, snapshotKelas) {
+                if (snapshotKelas.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                }
+
+                // Update Map Kelas secara LIVE dari Stream
+                Map<String, String> mapKelasLive = {};
+                if (snapshotKelas.hasData) {
+                  for (var k in snapshotKelas.data!) {
+                    mapKelasLive[k['id']] = k['nama_kelas'];
+                  }
+                }
+
+                return StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: AdminController.ambilSemuaJamaahStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: AppColors.primary),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(
                     child: Text(
@@ -360,9 +377,9 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                             statusJamaah: jamaah['status_jamaah'] is int 
                                 ? jamaah['status_jamaah'] 
                                 : int.tryParse(jamaah['status_jamaah']?.toString() ?? '1') ?? 1,
-                            idKelas: null, // Skip idKelas for detail modal if it's string
+                            idKelas: jamaah['id_kelas']?.toString(), // Use the valid string id
                           );
-                          _tampilDetailJamaah(context, model);
+                          _tampilDetailJamaah(context, model, mapKelasLive);
                         },
                         contentPadding: const EdgeInsets.all(16),
                         leading: Container(
@@ -388,21 +405,24 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warningLight,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  jamaah['id_kelas'] ?? 'Belum ada kelas',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.warning,
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warningLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    mapKelasLive[jamaah['id_kelas']] ?? 'Belum ada kelas',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.warning,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -464,7 +484,9 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
                   },
                 );
               },
-            ),
+            );
+          },
+        ),
           ),
         ],
       ),

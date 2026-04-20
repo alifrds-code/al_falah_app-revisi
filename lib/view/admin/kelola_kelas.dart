@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
-import 'package:al_falah_app/models/model_kelas.dart';
+import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/view/admin/detail_kelas.dart';
 
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/view/admin/form_kelas.dart';
+import 'package:al_falah_app/models/model_user.dart';
 
 class KelolaKelas extends StatefulWidget {
   const KelolaKelas({super.key});
@@ -58,7 +58,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
                 Navigator.pop(context); // Tutup dialognya dulu
                 try {
                   // Panggil fungsi hapus dari controller (Firebase)
-                  await AdminControllerFirebase.hapusKelas(kelas['id']);
+                  await AdminController.hapusKelas(kelas['id']);
 
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -152,16 +152,30 @@ class _KelolaKelasState extends State<KelolaKelas> {
             ),
           ),
 
-          // LIST DATA KELAS DENGAN STREAM BUILDER
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: AdminControllerFirebase.ambilSemuaKelasStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
+            child: StreamBuilder<List<UserModel>>(
+              stream: AdminController.ambilSemuaAsistenStream(),
+              builder: (context, snapshotAsisten) {
+                if (snapshotAsisten.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: AppColors.primary));
                 }
+                
+                // Buat kamus mapping UID -> Nama Asisten biar gampang dicari
+                final Map<String, String> mapAsisten = {};
+                if (snapshotAsisten.hasData) {
+                  for (var a in snapshotAsisten.data!) {
+                    mapAsisten[a.uid!] = a.nama;
+                  }
+                }
+
+                return StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: AdminController.ambilSemuaKelasStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: AppColors.primary),
+                      );
+                    }
                 if (snapshot.hasError) {
                   return Center(child: Text('Waduh error: ${snapshot.error}'));
                 }
@@ -188,8 +202,17 @@ class _KelolaKelasState extends State<KelolaKelas> {
                   itemCount: daftarKelas.length,
                   itemBuilder: (context, index) {
                     final kelas = daftarKelas[index];
-                    String namaAsisten =
-                        kelas['nama_asisten'] ?? "Cek di detail";
+                    
+                    // AMBIL NAMA ASISTEN LANGSUNG DARI STREAM ASISTEN (LIVE!)
+                    String namaAsisten;
+                    if (kelas['id_asisten'] != null && mapAsisten.containsKey(kelas['id_asisten'])) {
+                      namaAsisten = mapAsisten[kelas['id_asisten']]!;
+                    } else {
+                      namaAsisten = kelas['nama_asisten'] ?? "Belum ada asisten";
+                    }
+
+                    // Update kelas map for DetailKelas pass-along
+                    final kelasLive = {...kelas, 'nama_asisten': namaAsisten};
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -213,7 +236,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => DetailKelas(kelas: kelas),
+                              builder: (context) => DetailKelas(kelas: kelasLive),
                             ),
                           );
                         },
@@ -326,7 +349,9 @@ class _KelolaKelasState extends State<KelolaKelas> {
                   },
                 );
               },
-            ),
+            );
+          },
+        ),
           ),
         ],
       ),

@@ -1,21 +1,21 @@
 import 'dart:convert';
 
 class KelasModel {
-  final int? idKelas;
+  final String? idKelas;
   final String namaKelas;
-  final int? idAsisten; // Biarin di sini buat numpang lewat dari UI
+  final String? idAsisten; 
 
   KelasModel({this.idKelas, required this.namaKelas, this.idAsisten});
 
   Map<String, dynamic> toMap() {
-    // JANGAN MASUKIN id_asisten DI SINI! Karena emang ga ada di tb_kelas
-    return {'id_kelas': idKelas, 'nama_kelas': namaKelas};
+    return {'id_kelas': idKelas, 'nama_kelas': namaKelas, 'id_asisten': idAsisten};
   }
 
   factory KelasModel.fromMap(Map<String, dynamic> map) {
     return KelasModel(
-      idKelas: map['id_kelas'] != null ? map['id_kelas'] as int : null,
+      idKelas: map['id_kelas'] ?? map['id'],
       namaKelas: map['nama_kelas'] as String,
+      idAsisten: map['id_asisten'],
     );
   }
 

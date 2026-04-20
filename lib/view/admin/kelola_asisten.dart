@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/admin_controller_firebase.dart';
+import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/models/model_user.dart';
 
 // IMPORT GUDANG DESAIN KITA
@@ -197,17 +197,30 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
                 try {
                   // Panggil otak logika lu buat hapus (Firebase)
                   if (asisten.uid != null) {
-                    await AdminControllerFirebase.hapusAsisten(asisten.uid!);
-                    
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Data berhasil dihapus!'),
-                        backgroundColor: AppColors.primary,
-                      ),
+                    final success = await AdminController.hapusAsisten(
+                      asisten.uid!,
                     );
+
+                    if (!mounted) return;
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Data berhasil dihapus!'),
+                          backgroundColor: AppColors.primary,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Gagal menghapus data'),
+                          backgroundColor: AppColors.danger,
+                        ),
+                      );
+                    }
                   }
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Gagal menghapus: $e'),
@@ -291,7 +304,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
           ),
           Expanded(
             child: StreamBuilder<List<UserModel>>(
-              stream: AdminControllerFirebase.ambilSemuaAsistenStream(),
+              stream: AdminController.ambilSemuaAsistenStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(

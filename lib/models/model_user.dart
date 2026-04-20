@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 class UserModel {
-  final int? idUser;
+  final String? uid;
   final String nama;
   final String email;
   final String password;
   final String role;
+
   UserModel({
-    this.idUser,
+    this.uid,
     required this.nama,
     required this.email,
     required this.password,
@@ -17,7 +17,7 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'id_user': idUser,
+      'uid': uid,
       'nama': nama,
       'email': email,
       'password': password,
@@ -27,11 +27,11 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      idUser: map['id_user'],
-      nama: map['nama'],
-      email: map['email'],
-      password: map['password'],
-      role: map['role'],
+      uid: map['uid'] ?? map['id'],
+      nama: map['nama'] ?? '',
+      email: map['email'] ?? '',
+      password: map['password'] ?? '',
+      role: map['role'] ?? 'asisten',
     );
   }
 

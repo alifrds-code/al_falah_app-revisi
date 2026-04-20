@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/jamaah_controller.dart';
-import 'package:al_falah_app/controllers/kelas_controller.dart';
 import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/models/model_user.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
@@ -24,15 +22,15 @@ class _DetailKelasState extends State<DetailKelas> {
   }
 
   Future<List<Map<String, dynamic>>> _loadJamaahKelas() async {
-    return await JamaahController.getJamaahBerdasarkanKelas(
-      _dataKelas['id_kelas'],
+    return await AdminController.ambilJamaahByKelas(
+      _dataKelas['id'] ?? _dataKelas['id_kelas'],
     );
   }
 
-  void _tampilDetailAsisten(BuildContext context, int idAsisten) async {
-    final listAsisten = await AdminController.getSemuaAsisten();
+  void _tampilDetailAsisten(BuildContext context, String idAsisten) async {
+    final listAsisten = await AdminController.ambilSemuaAsisten();
     final UserModel? asistenLengkap = listAsisten.firstWhere(
-      (a) => a.idUser == idAsisten,
+      (a) => a.uid == idAsisten,
       orElse: () => UserModel(
         nama: 'Error',
         email: 'Tidak ditemukan',
@@ -371,7 +369,7 @@ class _DetailKelasState extends State<DetailKelas> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () async {
               Navigator.pop(context);
-              await KelasController.copotAsisten(_dataKelas['id_kelas']);
+              await AdminController.copotAsisten(_dataKelas['id'] ?? _dataKelas['id_kelas']);
               setState(() {
                 _dataKelas['nama_asisten'] = null;
                 _dataKelas['id_asisten'] = null;
@@ -417,7 +415,7 @@ class _DetailKelasState extends State<DetailKelas> {
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () async {
               Navigator.pop(context);
-              await JamaahController.keluarkanDariKelas(jamaah['id_jamaah']);
+              await AdminController.keluarkanDariKelas(jamaah['id'] ?? jamaah['id_jamaah']);
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -436,8 +434,205 @@ class _DetailKelasState extends State<DetailKelas> {
     );
   }
 
+  void _tampilPopUpPilihAsisten() {
+    String? selectedIdAsisten;
+    String? selectedNamaAsisten;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Pilih Asisten Kelas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textHeading,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pilih asisten yang akan bertanggung jawab untuk kelas ini.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSubtitle,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  FutureBuilder<List<UserModel>>(
+                    future: AdminController.ambilSemuaAsisten(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        );
+                      }
+
+                      final listAsisten = snapshot.data ?? [];
+
+                      if (listAsisten.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.dangerLight,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Data asisten kosong!\nSilakan tambah data asisten di menu Kelola Asisten terlebih dahulu.',
+                            style: TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+
+                      return DropdownButtonFormField<UserModel>(
+                        value: null,
+                        hint: const Text(
+                          'Pilih nama asisten...',
+                          style: TextStyle(
+                            color: AppColors.textHint,
+                            fontSize: 14,
+                          ),
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(
+                            Icons.person,
+                            color: AppColors.textHint,
+                            size: 20,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.background,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem<UserModel>(
+                            value: null,
+                            child: Text(
+                              '-- Batal Pilih --',
+                              style: TextStyle(
+                                color: AppColors.textSubtitle,
+                                fontStyle: FontStyle.italic,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          ...listAsisten.map((a) {
+                            return DropdownMenuItem<UserModel>(
+                              value: a,
+                              child: Text(
+                                a.nama,
+                                style: const TextStyle(
+                                  color: AppColors.textHeading,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                        onChanged: (UserModel? val) {
+                          setModalState(() {
+                            selectedIdAsisten = val?.uid;
+                            selectedNamaAsisten = val?.nama;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: selectedIdAsisten == null
+                          ? null
+                          : () async {
+                              Navigator.pop(context);
+                              await AdminController.assignAsistenKelas(
+                                _dataKelas['id'] ?? _dataKelas['id_kelas'],
+                                selectedIdAsisten!,
+                                selectedNamaAsisten!,
+                              );
+                              
+                              // Update local state temporarily so UI reflects instantly (StreamBuilder handles KelolaKelas, but DetailKelas uses static _dataKelas initially)
+                              setState(() {
+                                _dataKelas['id_asisten'] = selectedIdAsisten;
+                                _dataKelas['nama_asisten'] = selectedNamaAsisten;
+                              });
+
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Mantap! Asisten berhasil ditugaskan ke kelas ini.'),
+                                  backgroundColor: AppColors.primary,
+                                ),
+                              );
+                            },
+                      child: const Text(
+                        'PILIH ASISTEN INI',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _tampilPopUpPilihJamaah() {
-    int? selectedIdJamaah;
+    String? selectedIdJamaah;
 
     showModalBottomSheet(
       context: context,
@@ -490,8 +685,8 @@ class _DetailKelasState extends State<DetailKelas> {
                   // 2. Total Semua Jamaah di Database
                   FutureBuilder<List<dynamic>>(
                     future: Future.wait([
-                      JamaahController.getJamaahTanpaKelas(),
-                      JamaahController.getHitungTotalJamaah(),
+                      AdminController.getJamaahTanpaKelas(),
+                      AdminController.getHitungTotalJamaah(),
                     ]),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -545,7 +740,7 @@ class _DetailKelasState extends State<DetailKelas> {
                       }
 
                       // KONDISI 3: AMAN, TAMPILKAN DROPDOWN
-                      return DropdownButtonFormField<int?>(
+                      return DropdownButtonFormField<String?>(
                         value: selectedIdJamaah,
                         hint: const Text(
                           'Pilih nama jamaah...',
@@ -577,7 +772,7 @@ class _DetailKelasState extends State<DetailKelas> {
                           ),
                         ),
                         items: [
-                          const DropdownMenuItem<int?>(
+                          const DropdownMenuItem<String?>(
                             value: null,
                             child: Text(
                               '-- Batal Pilih --',
@@ -589,8 +784,8 @@ class _DetailKelasState extends State<DetailKelas> {
                             ),
                           ),
                           ...listNganggur.map((j) {
-                            return DropdownMenuItem<int?>(
-                              value: j['id_jamaah'],
+                            return DropdownMenuItem<String?>(
+                              value: j['id'] ?? j['id_jamaah'],
                               child: Text(
                                 j['nama_lengkap'],
                                 style: const TextStyle(
@@ -626,9 +821,9 @@ class _DetailKelasState extends State<DetailKelas> {
                           ? null
                           : () async {
                               Navigator.pop(context);
-                              await JamaahController.assignKelas(
+                              await AdminController.assignKelas(
                                 selectedIdJamaah!,
-                                _dataKelas['id_kelas'],
+                                _dataKelas['id'] ?? _dataKelas['id_kelas'],
                               );
                               setState(() {});
                               if (!mounted) return;
@@ -758,7 +953,7 @@ class _DetailKelasState extends State<DetailKelas> {
                               context,
                               _dataKelas['id_asisten'],
                             )
-                          : null,
+                          : _tampilPopUpPilihAsisten, // Kalau belum ada asisten, panggil popup pilih asisten
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.all(16),

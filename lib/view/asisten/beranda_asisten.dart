@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/kelas_controller.dart';
+import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/widgets/drawer_asisten.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 
 class BerandaAsisten extends StatefulWidget {
-  final int idUser; // PENTING: Buat nyari kelas yang dia pegang
+  final String uid; // PENTING: Buat nyari kelas yang dia pegang
   final String namaUser;
   final String emailUser;
 
   const BerandaAsisten({
     super.key,
-    required this.idUser,
+    required this.uid,
     required this.namaUser,
     required this.emailUser,
   });
@@ -22,7 +22,8 @@ class BerandaAsisten extends StatefulWidget {
 class _BerandaAsistenState extends State<BerandaAsisten> {
   // Panggil fungsi controller yang baru lu buat di Langkah 1
   Future<List<Map<String, dynamic>>> _loadKelasSaya() async {
-    return await KelasController.getKelasByAsisten(widget.idUser);
+    final allKelas = await AdminController.ambilSemuaKelas();
+    return allKelas.where((k) => k['id_asisten'] == widget.uid).toList();
   }
 
   @override

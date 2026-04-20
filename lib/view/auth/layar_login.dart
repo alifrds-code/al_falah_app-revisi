@@ -67,7 +67,7 @@ class _LayarLoginState extends State<LayarLogin> {
           // ARAHIN KE HALAMAN ASISTEN SAMBIL BAWA DATANYA
           context.pushAndRemoveAll(
             BerandaAsisten(
-              idUser: user.idUser ?? 0,
+              uid: user.uid ?? '',
               namaUser: user.nama,
               emailUser: user.email,
             ),

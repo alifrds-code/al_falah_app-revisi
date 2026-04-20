@@ -5,9 +5,6 @@ import 'package:al_falah_app/view/admin/kelola_kelas.dart';
 import 'package:al_falah_app/view/admin/kelola_asisten.dart';
 import 'package:al_falah_app/view/admin/kelola_jamaah.dart';
 
-// IMPORT CONTROLLER BUAT NARIK TOTAL ANGKA
-import 'package:al_falah_app/controllers/kelas_controller.dart';
-import 'package:al_falah_app/controllers/jamaah_controller.dart';
 import 'package:al_falah_app/controllers/admin_controller.dart';
 
 // IMPORT GUDANG DESAIN KITA:
@@ -32,9 +29,13 @@ class BerandaAdmin extends StatefulWidget {
 class _BerandaAdminState extends State<BerandaAdmin> {
   // Fungsi gabungan buat narik semua total angka sekaligus
   Future<Map<String, int>> _loadStatistikDashboard() async {
-    final totalKelas = await KelasController.getHitungTotalKelas();
-    final totalJamaah = await JamaahController.getHitungTotalJamaah();
-    final totalAsisten = await AdminController.getHitungTotalAsisten();
+    final kelasList = await AdminController.ambilSemuaKelas();
+    final jamaahList = await AdminController.ambilSemuaJamaah();
+    final asistenList = await AdminController.ambilSemuaAsisten();
+    
+    final totalKelas = kelasList.length;
+    final totalJamaah = jamaahList.length;
+    final totalAsisten = asistenList.length;
     // TODO: Nanti kalau jadwal udah jadi, tambahin hitung jadwal bulan ini di sini
 
     return {

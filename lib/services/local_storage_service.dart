@@ -13,14 +13,18 @@ class PreferenceHandler {
 
   // Key untuk nyimpen data
   static const String _isLogin = 'isLogin';
-  static const String _idUser = 'idUser';
+  static const String _uid = 'uid';
   static const String _role = 'role'; // 'admin' atau 'asisten'
+  static const String _nama = 'nama';
+  static const String _email = 'email';
 
   // CREATE / UPDATE: Simpan Sesi Pas Login Sukses
-  Future<void> saveUserSession(bool isLogin, int idUser, String role) async {
+  Future<void> saveUserSession(bool isLogin, String uid, String role, String nama, String email) async {
     await _preferences.setBool(_isLogin, isLogin);
-    await _preferences.setInt(_idUser, idUser);
+    await _preferences.setString(_uid, uid);
     await _preferences.setString(_role, role);
+    await _preferences.setString(_nama, nama);
+    await _preferences.setString(_email, email);
   }
 
   // GET: Ambil Status Login
@@ -29,8 +33,8 @@ class PreferenceHandler {
   }
 
   // GET: Ambil ID User (Buat asisten pas mau bikin jadwal/absen)
-  Future<int?> getIdUser() async {
-    return _preferences.getInt(_idUser);
+  Future<String?> getUid() async {
+    return _preferences.getString(_uid);
   }
 
   // GET: Ambil Role (Buat nentuin arah ke Beranda Admin / Asisten)
@@ -38,10 +42,20 @@ class PreferenceHandler {
     return _preferences.getString(_role);
   }
 
+  Future<String?> getNama() async {
+    return _preferences.getString(_nama);
+  }
+
+  Future<String?> getEmail() async {
+    return _preferences.getString(_email);
+  }
+
   // DELETE: Hapus Sesi Pas Logout
   Future<void> logout() async {
     await _preferences.remove(_isLogin);
-    await _preferences.remove(_idUser);
+    await _preferences.remove(_uid);
     await _preferences.remove(_role);
+    await _preferences.remove(_nama);
+    await _preferences.remove(_email);
   }
 }

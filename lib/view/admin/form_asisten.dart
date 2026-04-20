@@ -57,28 +57,21 @@ class _FormAsistenState extends State<FormAsisten> {
               ? widget.asistenLama!.password
               : _passwordController.text.trim();
 
-          UserModel asistenUpdate = UserModel(
-            idUser:
-                widget.asistenLama!.idUser, // ID wajib ada buat patokan UPDATE
-            nama: _namaController.text.trim(),
-            email: _emailController.text.trim(),
-            password: passwordFinal,
-            role: 'asisten', // Tetep asisten
-          );
-
-          await AdminController.updateAsisten(asistenUpdate);
+          await AdminController.updateAsisten(widget.asistenLama!.uid!, {
+            'nama': _namaController.text.trim(),
+            'email': _emailController.text.trim(),
+            'password': passwordFinal,
+            'role': 'asisten',
+          });
         } else {
           // ==========================================
           // MODE TAMBAH BARU (CREATE)
           // ==========================================
-          UserModel asistenBaru = UserModel(
+          await AdminController.tambahAsisten(
             nama: _namaController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
-            role: 'asisten',
           );
-
-          await AdminController.tambahAsisten(asistenBaru);
         }
 
         if (!mounted) return;
@@ -102,10 +95,14 @@ class _FormAsistenState extends State<FormAsisten> {
         // KITA CEGAT ERROR DARI SQLITE DI SINI
         String pesanError = e.toString();
 
-        // Kalau error-nya gara-gara email udah ada di database (UNIQUE constraint)
-        if (pesanError.contains('UNIQUE constraint failed')) {
+        // Kalau error-nya gara-gara email udah ada di database Firebase (Firebase Auth error)
+        if (pesanError.contains('UNIQUE constraint failed') || pesanError.contains('email-already-in-use')) {
           pesanError =
               'Gagal: Email tersebut sudah terdaftar! Silakan gunakan email lain.';
+        } else if (pesanError.contains('weak-password')) {
+          pesanError = 'Gagal: Password terlalu lemah, minimal 6 karakter.';
+        } else if (pesanError.contains('invalid-email')) {
+          pesanError = 'Gagal: Format email tidak valid.';
         } else {
           // Kalau error lain, tampilin aslinya
           pesanError = 'Terjadi kesalahan sistem: $e';

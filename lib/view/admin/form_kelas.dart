@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/kelas_controller.dart';
+// ... removed old controller
 import 'package:al_falah_app/controllers/admin_controller.dart'; // Buat narik data ustadz
 import 'package:al_falah_app/models/model_kelas.dart';
 import 'package:al_falah_app/models/model_user.dart'; // Buat model ustadz
@@ -30,7 +30,7 @@ class _FormKelasState extends State<FormKelas> {
 
   // Penampung daftar ustadz buat dropdown
   List<UserModel> _daftarAsisten = [];
-  int? _selectedIdAsisten; // Nyimpen ID ustadz yang dipilih
+  String? _selectedIdAsisten; // Nyimpen ID ustadz yang dipilih
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _FormKelasState extends State<FormKelas> {
 
   // Fungsi narik data asisten buat menu Dropdown
   void _loadDaftarAsisten() async {
-    final asisten = await AdminController.getSemuaAsisten();
+    final asisten = await AdminController.ambilSemuaAsisten();
     setState(() {
       _daftarAsisten = asisten;
       // Kalau lagi mode edit dan kelas ini udah punya ustadz, langsung pilih ustadznya
@@ -78,7 +78,7 @@ class _FormKelasState extends State<FormKelas> {
 
           // Lempar ke controller buat diupdate ke SQLite
           // (Pastikan lu udah bikin fungsi updateKelas di KelasController ya Bro!)
-          await KelasController.updateKelas(kelasUpdate);
+          await AdminController.updateKelas(kelasUpdate.idKelas!, kelasUpdate);
         } else {
           // ==========================================
           // MODE TAMBAH BARU (CUMA NAMA KELAS)
@@ -88,8 +88,8 @@ class _FormKelasState extends State<FormKelas> {
             // idAsisten dikosongin dulu sesuai rencana lu
           );
 
-          // Lempar ke controller buat disimpen ke SQLite
-          await KelasController.tambahKelas(kelasBaru);
+          // Lempar ke controller buat disimpen
+          await AdminController.tambahKelas(kelasBaru);
         }
 
         if (!mounted) return;
@@ -240,8 +240,8 @@ class _FormKelasState extends State<FormKelas> {
                     // ==========================================
                     if (isEdit) ...[
                       const SizedBox(height: 16),
-                      // Ubah tipe datanya jadi int? (pake tanda tanya)
-                      DropdownButtonFormField<int?>(
+                      // Ubah tipe datanya jadi String?
+                      DropdownButtonFormField<String?>(
                         value: _selectedIdAsisten,
                         hint: const Text(
                           'Pilih Ustadz / Asisten',
@@ -278,7 +278,7 @@ class _FormKelasState extends State<FormKelas> {
                         ),
                         // KITA TAMBAHIN OPSI KOSONG DI PALING ATAS
                         items: [
-                          const DropdownMenuItem<int?>(
+                          const DropdownMenuItem<String?>(
                             value: null,
                             child: Text(
                               '-- Kosongkan Asisten --',
@@ -291,8 +291,8 @@ class _FormKelasState extends State<FormKelas> {
                           ),
                           // Baru dilanjut sama daftar asisten dari database
                           ..._daftarAsisten.map((asisten) {
-                            return DropdownMenuItem<int?>(
-                              value: asisten.idUser,
+                            return DropdownMenuItem<String?>(
+                              value: asisten.uid,
                               child: Text(
                                 asisten.nama,
                                 style: const TextStyle(

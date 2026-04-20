@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 class JamaahModel {
-  final int? idJamaah;
+  final String? idJamaah;
   final String namaLengkap;
   final String jenisKelamin;
   final String? noHp;
   final String alamat;
   final int statusJamaah;
-  final int? idKelas; // KASIH TANDA TANYA BIAR BOLEH KOSONG
+  final String? idKelas; 
 
   JamaahModel({
     this.idJamaah,
@@ -16,7 +16,7 @@ class JamaahModel {
     this.noHp,
     required this.alamat,
     this.statusJamaah = 1,
-    this.idKelas, // HAPUS KATA 'required' DI SINI
+    this.idKelas,
   });
 
   Map<String, dynamic> toMap() {
@@ -33,14 +33,13 @@ class JamaahModel {
 
   factory JamaahModel.fromMap(Map<String, dynamic> map) {
     return JamaahModel(
-      idJamaah: map['id_jamaah'] != null ? map['id_jamaah'] as int : null,
+      idJamaah: map['id_jamaah'] ?? map['id'],
       namaLengkap: map['nama_lengkap'] as String,
       jenisKelamin: map['jenis_kelamin'] as String,
       noHp: map['no_hp'] != null ? map['no_hp'] as String : null,
       alamat: map['alamat'] as String,
-      statusJamaah: map['status_jamaah'] as int,
-      // PENGAMAN BIAR GAK ERROR KALAU NULL
-      idKelas: map['id_kelas'] != null ? map['id_kelas'] as int : null,
+      statusJamaah: map['status_jamaah'] != null ? int.tryParse(map['status_jamaah'].toString()) ?? 1 : 1,
+      idKelas: map['id_kelas']?.toString(),
     );
   }
 

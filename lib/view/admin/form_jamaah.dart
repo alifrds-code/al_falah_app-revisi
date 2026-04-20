@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/jamaah_controller.dart';
-import 'package:al_falah_app/controllers/kelas_controller.dart';
+import 'package:al_falah_app/controllers/admin_controller.dart';
 import 'package:al_falah_app/models/model_jamaah.dart';
 
 // IMPORT GUDANG DESAIN KITA
@@ -10,7 +9,7 @@ import 'package:al_falah_app/widgets/form_isian.dart';
 class FormJamaah extends StatefulWidget {
   final Map<String, dynamic>? jamaahLama;
   // TAMBAHAN: Buat nangkep ID kelas kalau form dipanggil dari Detail Kelas
-  final int? preselectedIdKelas;
+  final String? preselectedIdKelas;
 
   const FormJamaah({Key? key, this.jamaahLama, this.preselectedIdKelas})
     : super(key: key);
@@ -30,7 +29,7 @@ class _FormJamaahState extends State<FormJamaah> {
   bool get isEdit => widget.jamaahLama != null;
 
   String? _selectedJK;
-  int? _selectedIdKelas; // Tipe datanya int? biar bisa null
+  String? _selectedIdKelas; // Tipe datanya String? biar bisa null
   List<Map<String, dynamic>> _daftarKelas = [];
 
   @override
@@ -45,9 +44,7 @@ class _FormJamaahState extends State<FormJamaah> {
       _selectedJK = widget.jamaahLama!['jenis_kelamin'];
 
       if (widget.jamaahLama!['id_kelas'] != null) {
-        _selectedIdKelas = int.tryParse(
-          widget.jamaahLama!['id_kelas'].toString(),
-        );
+        _selectedIdKelas = widget.jamaahLama!['id_kelas'].toString();
       }
     } else if (widget.preselectedIdKelas != null) {
       // TAMBAHAN: Kalau dari layar Detail Kelas, otomatis pilih kelasnya
@@ -56,7 +53,7 @@ class _FormJamaahState extends State<FormJamaah> {
   }
 
   void _loadDaftarKelas() async {
-    final kelas = await KelasController.getDaftarKelasLengkap();
+    final kelas = await AdminController.ambilSemuaKelas();
 
     // GANTI BAGIAN SETSTATE INI
     if (mounted) {
@@ -68,7 +65,7 @@ class _FormJamaahState extends State<FormJamaah> {
         // Kalau ternyata udah dihapus kelasnya, kita set null aja biar ga error.
         if (_selectedIdKelas != null) {
           bool kelasAda = _daftarKelas.any(
-            (k) => k['id_kelas'] == _selectedIdKelas,
+            (k) => k['id'] == _selectedIdKelas,
           );
           if (!kelasAda) {
             _selectedIdKelas = null;
@@ -106,9 +103,9 @@ class _FormJamaahState extends State<FormJamaah> {
         );
 
         if (isEdit) {
-          await JamaahController.updateJamaah(dataJamaah);
+          await AdminController.updateJamaah(widget.jamaahLama!['id'], dataJamaah);
         } else {
-          await JamaahController.tambahJamaah(dataJamaah);
+          await AdminController.tambahJamaah(dataJamaah);
         }
 
         if (!mounted) return;
@@ -309,10 +306,10 @@ class _FormJamaahState extends State<FormJamaah> {
                     ),
                     const SizedBox(height: 16),
 
-                    DropdownButtonFormField<int?>(
+                    DropdownButtonFormField<String?>(
                       value:
                           _daftarKelas.any(
-                            (k) => k['id_kelas'] == _selectedIdKelas,
+                            (k) => k['id'] == _selectedIdKelas,
                           )
                           ? _selectedIdKelas
                           : null,
@@ -349,7 +346,7 @@ class _FormJamaahState extends State<FormJamaah> {
                       ),
                       items: [
                         // INI OPSI BUAT MENGOSONGKAN KELAS
-                        const DropdownMenuItem<int?>(
+                        const DropdownMenuItem<String?>(
                           value: null,
                           child: Text(
                             '-- Belum ada kelas --',
@@ -362,8 +359,8 @@ class _FormJamaahState extends State<FormJamaah> {
                         ),
                         // DAFTAR KELAS DARI DATABASE
                         ..._daftarKelas.map((kelas) {
-                          return DropdownMenuItem<int?>(
-                            value: kelas['id_kelas'],
+                          return DropdownMenuItem<String?>(
+                            value: kelas['id'],
                             child: Text(
                               kelas['nama_kelas'],
                               style: const TextStyle(
