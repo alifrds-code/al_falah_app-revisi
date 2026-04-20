@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:al_falah_app/controllers/jamaah_controller.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class TabPengumumanJamaah extends StatefulWidget {
   const TabPengumumanJamaah({super.key});
@@ -82,40 +83,47 @@ class _TabPengumumanJamaahState extends State<TabPengumumanJamaah> with SingleTi
                 ),
               ] else ...[
                 // ACARA
-                if ((data['url_poster'] ?? '').isNotEmpty)
-                  Container(
-                    height: 200,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    width: double.infinity,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: data['url_poster'].startsWith('http')
-                          ? Image.network(data['url_poster'], fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image))
-                          : Image.memory(base64Decode(data['url_poster']), fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image)),
-                    ),
-                  ),
-                Text(
-                  data['nama_acara'] ?? '-',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textHeading),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      data['tanggal'] ?? '-',
-                      style: const TextStyle(fontSize: 14, color: AppColors.textBody),
-                    ),
-                  ],
-                ),
+                Builder(builder: (context) {
+                  DateTime pTgl;
+                  try { pTgl = DateTime.parse(data['tanggal'] ?? ''); } catch (_) { pTgl = DateTime.now(); }
+                  final tStr = DateFormat('dd MMMM yyyy').format(pTgl);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if ((data['url_poster'] ?? '').isNotEmpty)
+                        Container(
+                          height: 200,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          width: double.infinity,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: data['url_poster'].startsWith('http')
+                                ? Image.network(data['url_poster'], fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image))
+                                : Image.memory(base64Decode(data['url_poster']), fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image)),
+                          ),
+                        ),
+                      Text(
+                        data['nama_acara'] ?? '-',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textHeading),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Text(tStr, style: const TextStyle(fontSize: 14, color: AppColors.textBody)),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 16, color: AppColors.warning),
                     const SizedBox(width: 8),
                     Text(
-                      data['waktu'] ?? '-',
+                      data['jam'] ?? '-',
                       style: const TextStyle(fontSize: 14, color: AppColors.textBody),
                     ),
                   ],
@@ -207,6 +215,10 @@ class _TabPengumumanJamaahState extends State<TabPengumumanJamaah> with SingleTi
                               itemCount: _pengumumanList.length,
                               itemBuilder: (context, index) {
                                 final item = _pengumumanList[index];
+                                DateTime pDate;
+                                try { pDate = DateTime.parse(item['tanggal_dibuat'] ?? ''); } catch (_) { pDate = DateTime.now(); }
+                                final dateStr = DateFormat('dd MMM yyyy').format(pDate);
+
                                 return Card(
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -240,7 +252,7 @@ class _TabPengumumanJamaahState extends State<TabPengumumanJamaah> with SingleTi
                                                   style: const TextStyle(fontSize: 12, color: AppColors.textBody),
                                                 ),
                                                 const SizedBox(height: 6),
-                                                Text(item['tanggal_dibuat'] ?? '-', style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle)),
+                                                Text(dateStr, style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle)),
                                               ],
                                             ),
                                           ),
@@ -278,6 +290,10 @@ class _TabPengumumanJamaahState extends State<TabPengumumanJamaah> with SingleTi
                               itemBuilder: (context, index) {
                                 final item = _acaraList[index];
                                 final urlPoster = item['url_poster'] ?? '';
+                                
+                                DateTime pDate;
+                                try { pDate = DateTime.parse(item['tanggal'] ?? ''); } catch (_) { pDate = DateTime.now(); }
+                                final dateStr = DateFormat('dd MMM yyyy').format(pDate);
 
                                 return InkWell(
                                   onTap: () => _bukaDetail('acara', item),
@@ -322,7 +338,7 @@ class _TabPengumumanJamaahState extends State<TabPengumumanJamaah> with SingleTi
                                                   const SizedBox(width: 4),
                                                   Expanded(
                                                     child: Text(
-                                                      item['tanggal'] ?? '-',
+                                                      dateStr,
                                                       overflow: TextOverflow.ellipsis,
                                                       style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle),
                                                     ),
