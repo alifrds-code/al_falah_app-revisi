@@ -84,10 +84,7 @@ class _BerandaJamaahState extends State<BerandaJamaah> {
           child: Container(color: AppColors.borderLight, height: 1),
         ),
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: _pages[_currentIndex],
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.borderLight, width: 1)),
