@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:al_falah_app/controllers/admin_controller.dart';
-import 'package:al_falah_app/widgets/drawer_asisten.dart';
+import 'package:al_falah_app/controllers/login_controller.dart';
+import 'package:al_falah_app/extensions/navigator.dart';
+import 'package:al_falah_app/view/auth/layar_login.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
+import 'package:al_falah_app/view/asisten/tab_beranda_asisten.dart';
+import 'package:al_falah_app/view/asisten/tab_jadwal.dart';
+import 'package:al_falah_app/view/asisten/tab_absensi.dart';
 
 class BerandaAsisten extends StatefulWidget {
-  final String uid; // PENTING: Buat nyari kelas yang dia pegang
+  final String uid;
   final String namaUser;
   final String emailUser;
 
@@ -20,10 +24,63 @@ class BerandaAsisten extends StatefulWidget {
 }
 
 class _BerandaAsistenState extends State<BerandaAsisten> {
-  // Panggil fungsi controller yang baru lu buat di Langkah 1
-  Future<List<Map<String, dynamic>>> _loadKelasSaya() async {
-    final allKelas = await AdminController.ambilSemuaKelas();
-    return allKelas.where((k) => k['id_asisten'] == widget.uid).toList();
+  int _currentIndex = 0;
+
+  late final List<Widget> _pages;
+  final List<String> _titles = ['Beranda', 'Jadwal Kelas', 'Absensi Jamaah'];
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      TabBerandaAsisten(uid: widget.uid, namaUser: widget.namaUser),
+      TabJadwal(uid: widget.uid),
+      TabAbsensi(uid: widget.uid),
+    ];
+  }
+
+  void _konfirmasiLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Keluar?',
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textHeading),
+        ),
+        content: const Text(
+          'Apakah Anda yakin ingin keluar dari akun ini?',
+          style: TextStyle(color: AppColors.textBody, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: AppColors.textSubtitle, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              await LoginController.logout();
+              if (context.mounted) {
+                context.pushAndRemoveAll(const LayarLogin());
+              }
+            },
+            child: const Text(
+              'Ya, Keluar',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -31,226 +88,62 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Ahlan Wa Sahlan,",
-              style: TextStyle(fontSize: 12, color: AppColors.textSubtitle),
-            ),
-            Text(
-              widget.namaUser,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textHeading,
-              ),
-            ),
-          ],
+        automaticallyImplyLeading: false,
+        title: Text(
+          _titles[_currentIndex],
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textHeading,
+          ),
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textHeading),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.danger),
+            tooltip: 'Keluar',
+            onPressed: _konfirmasiLogout,
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppColors.borderLight, height: 1),
+        ),
       ),
-      drawer: DrawerAsisten(
-        namaUser: widget.namaUser,
-        emailUser: widget.emailUser,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // BAGIAN 1: DAFTAR KELAS YANG DIPEGANG (ASLI DARI SQLITE)
-            const Text(
-              'KELAS YANG DIKELOLA',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSubtitle,
-                letterSpacing: 1.2,
-              ),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.borderLight, width: 1)),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          backgroundColor: AppColors.surface,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: AppColors.textHint,
+          selectedFontSize: 12,
+          unselectedFontSize: 12,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_outlined),
+              activeIcon: Icon(Icons.dashboard),
+              label: 'Beranda',
             ),
-            const SizedBox(height: 12),
-
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _loadKelasSaya(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
-                }
-
-                final listKelas = snapshot.data ?? [];
-
-                if (listKelas.isEmpty) {
-                  return Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: const Text(
-                      'Anda belum ditugaskan sebagai asisten di kelas manapun.\nSilakan hubungi Admin.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSubtitle),
-                    ),
-                  );
-                }
-
-                // Tampilin list kelas
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: listKelas.length,
-                  itemBuilder: (context, index) {
-                    final kelas = listKelas[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.class_, color: Colors.white),
-                        ),
-                        title: Text(
-                          kelas['nama_kelas'],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                        subtitle: const Text(
-                          'Ketuk untuk kelola absensi & jadwal',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
-                        ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                        ),
-                        onTap: () {
-                          // Nanti kalau di-klik masuk ke detail manajemen kelas buat asisten
-                          print(
-                            "Buka manajemen absensi kelas: ${kelas['nama_kelas']}",
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month_outlined),
+              activeIcon: Icon(Icons.calendar_month),
+              label: 'Jadwal',
             ),
-
-            const SizedBox(height: 32),
-
-            // jadwal
-            const Text(
-              'JADWAL HARI INI',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSubtitle,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.borderLight),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.warningLight,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.schedule,
-                          color: AppColors.warning,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Fiqih Muamalah',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textHeading,
-                              ),
-                            ),
-                            Text(
-                              'Ustadz Fulan (18:30 - 20:00)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSubtitle,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.info,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      icon: const Icon(
-                        Icons.fact_check,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      label: const Text(
-                        'Mulai Absensi',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      onPressed: () {
-                        print("Mulai Absen");
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fact_check_outlined),
+              activeIcon: Icon(Icons.fact_check),
+              label: 'Absensi',
             ),
           ],
         ),

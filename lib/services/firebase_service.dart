@@ -519,16 +519,26 @@ class FirebaseService {
 
   static Future<String> tambahJadwal({
     required String idKelas,
+    required String idUser,
     required DateTime tanggal,
-    required String tema,
-    String? deskripsi,
+    required String waktuMulai,
+    required String waktuSelesai,
+    String? materiPembahasan,
+    String? namaPemateri,
+    int statusJadwal = 0,
+    String? alasanPerubahan,
   }) async {
     final docRef = _firestore.collection(_koleksiJadwal).doc();
     await docRef.set({
       'id_kelas': idKelas,
-      'tanggal': tanggal.toIso8601String().split('T')[0], // Format YYYY-MM-DD
-      'tema': tema,
-      'deskripsi': deskripsi ?? '',
+      'id_user': idUser,
+      'tanggal': tanggal.toIso8601String().split('T')[0],
+      'waktu_mulai': waktuMulai,
+      'waktu_selesai': waktuSelesai,
+      'materi_pembahasan': materiPembahasan ?? '',
+      'nama_pemateri': namaPemateri ?? '',
+      'status_jadwal': statusJadwal,
+      'alasan_perubahan': alasanPerubahan ?? '',
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
@@ -579,15 +589,37 @@ class FirebaseService {
   static Future<void> updateJadwal(
     String idJadwal, {
     required String idKelas,
+    required String idUser,
     required DateTime tanggal,
-    required String tema,
-    String? deskripsi,
+    required String waktuMulai,
+    required String waktuSelesai,
+    String? materiPembahasan,
+    String? namaPemateri,
+    int statusJadwal = 0,
+    String? alasanPerubahan,
   }) async {
     await _firestore.collection(_koleksiJadwal).doc(idJadwal).update({
       'id_kelas': idKelas,
+      'id_user': idUser,
       'tanggal': tanggal.toIso8601String().split('T')[0],
-      'tema': tema,
-      'deskripsi': deskripsi ?? '',
+      'waktu_mulai': waktuMulai,
+      'waktu_selesai': waktuSelesai,
+      'materi_pembahasan': materiPembahasan ?? '',
+      'nama_pemateri': namaPemateri ?? '',
+      'status_jadwal': statusJadwal,
+      'alasan_perubahan': alasanPerubahan ?? '',
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  static Future<void> updateStatusJadwal(
+    String idJadwal, {
+    required int statusJadwal,
+    String? alasanPerubahan,
+  }) async {
+    await _firestore.collection(_koleksiJadwal).doc(idJadwal).update({
+      'status_jadwal': statusJadwal,
+      'alasan_perubahan': alasanPerubahan ?? '',
       'updated_at': FieldValue.serverTimestamp(),
     });
   }

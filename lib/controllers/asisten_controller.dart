@@ -1,15 +1,12 @@
-import 'package:al_falah_app/models/model_jadwal.dart';
-import 'package:al_falah_app/models/model_absensi.dart';
 import 'package:al_falah_app/services/firebase_service.dart';
 
 class AsistenController {
   // ==================== CRUD JADWAL ====================
-  static Future<List<JadwalModel>> ambilJadwalByAsisten(
+  static Future<List<Map<String, dynamic>>> ambilJadwalByAsistenRaw(
     String uidAsisten,
   ) async {
     try {
-      final dataJadwal = await FirebaseService.ambilJadwalByAsisten(uidAsisten);
-      return dataJadwal.map((data) => JadwalModel.fromMap(data)).toList();
+      return await FirebaseService.ambilJadwalByAsisten(uidAsisten);
     } catch (e) {
       print('Error ambil jadwal: $e');
       return [];
@@ -18,16 +15,22 @@ class AsistenController {
 
   static Future<bool> tambahJadwal({
     required String idKelas,
+    required String idUser,
     required DateTime tanggal,
-    required String tema,
-    String? deskripsi,
+    required String waktuMulai,
+    required String waktuSelesai,
+    String? materiPembahasan,
+    String? namaPemateri,
   }) async {
     try {
       await FirebaseService.tambahJadwal(
         idKelas: idKelas,
+        idUser: idUser,
         tanggal: tanggal,
-        tema: tema,
-        deskripsi: deskripsi,
+        waktuMulai: waktuMulai,
+        waktuSelesai: waktuSelesai,
+        materiPembahasan: materiPembahasan,
+        namaPemateri: namaPemateri,
       );
       return true;
     } catch (e) {
@@ -39,21 +42,49 @@ class AsistenController {
   static Future<bool> updateJadwal(
     String idJadwal, {
     required String idKelas,
+    required String idUser,
     required DateTime tanggal,
-    required String tema,
-    String? deskripsi,
+    required String waktuMulai,
+    required String waktuSelesai,
+    String? materiPembahasan,
+    String? namaPemateri,
+    int statusJadwal = 0,
+    String? alasanPerubahan,
   }) async {
     try {
       await FirebaseService.updateJadwal(
         idJadwal,
         idKelas: idKelas,
+        idUser: idUser,
         tanggal: tanggal,
-        tema: tema,
-        deskripsi: deskripsi,
+        waktuMulai: waktuMulai,
+        waktuSelesai: waktuSelesai,
+        materiPembahasan: materiPembahasan,
+        namaPemateri: namaPemateri,
+        statusJadwal: statusJadwal,
+        alasanPerubahan: alasanPerubahan,
       );
       return true;
     } catch (e) {
       print('Error update jadwal: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> updateStatusJadwal(
+    String idJadwal, {
+    required int statusJadwal,
+    String? alasanPerubahan,
+  }) async {
+    try {
+      await FirebaseService.updateStatusJadwal(
+        idJadwal,
+        statusJadwal: statusJadwal,
+        alasanPerubahan: alasanPerubahan,
+      );
+      return true;
+    } catch (e) {
+      print('Error update status jadwal: $e');
       return false;
     }
   }
@@ -69,12 +100,11 @@ class AsistenController {
   }
 
   // ==================== ABSENSI ====================
-  static Future<List<AbsensiModel>> ambilAbsensiByJadwal(
+  static Future<List<Map<String, dynamic>>> ambilAbsensiByJadwal(
     String idJadwal,
   ) async {
     try {
-      final dataAbsensi = await FirebaseService.ambilAbsensiByJadwal(idJadwal);
-      return dataAbsensi.map((data) => AbsensiModel.fromMap(data)).toList();
+      return await FirebaseService.ambilAbsensiByJadwal(idJadwal);
     } catch (e) {
       print('Error ambil absensi: $e');
       return [];
