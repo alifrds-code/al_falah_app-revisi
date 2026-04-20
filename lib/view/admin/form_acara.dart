@@ -273,12 +273,18 @@ class _FormAcaraState extends State<FormAcara> {
                 Expanded(
                   child: _buildSelectorCard(
                     title: 'Jam',
-                    value: _selectedTime == null ? 'Pilih Jam' : _selectedTime!.format(context),
+                    value: _selectedTime == null ? 'Pilih Jam' : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                     icon: Icons.access_time,
                     onTap: () async {
                       final picked = await showTimePicker(
                         context: context,
                         initialTime: _selectedTime ?? TimeOfDay.now(),
+                        builder: (BuildContext context, Widget? child) {
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                            child: child!,
+                          );
+                        },
                       );
                       if (picked != null) {
                         setState(() => _selectedTime = picked);
