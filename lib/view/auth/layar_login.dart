@@ -3,6 +3,7 @@ import 'package:al_falah_app/controllers/login_controller.dart';
 import 'package:al_falah_app/extensions/navigator.dart';
 import 'package:al_falah_app/view/admin/beranda_admin.dart';
 import 'package:al_falah_app/view/asisten/beranda_asisten.dart';
+import 'package:al_falah_app/view/jamaah/beranda_jamaah.dart';
 
 // IMPORT GUDANG DESAIN KITA:
 import 'package:al_falah_app/utils/app_colors.dart';
@@ -108,6 +109,20 @@ class _LayarLoginState extends State<LayarLogin> {
     return Scaffold(
       backgroundColor:
           AppColors.background, // Pake abu-abu super muda dari tema
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.primary),
+            onPressed: () {
+              context.pushAndRemoveAll(const BerandaJamaah());
+            },
+            tooltip: 'Kembali ke Beranda Jamaah',
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
