@@ -11,10 +11,11 @@ class TabJadwalJamaah extends StatefulWidget {
   State<TabJadwalJamaah> createState() => _TabJadwalJamaahState();
 }
 
-class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProviderStateMixin {
+class _TabJadwalJamaahState extends State<TabJadwalJamaah>
+    with SingleTickerProviderStateMixin {
   final PreferenceHandler _pref = PreferenceHandler();
   late TabController _tabController;
-  
+
   List<Map<String, dynamic>> _jadwalMendatang = [];
   List<Map<String, dynamic>> _jadwalRiwayat = [];
   bool _isLoading = true;
@@ -29,21 +30,26 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
   Future<void> _loadData() async {
     await _pref.init();
     final ids = await _pref.getKelasJamaah();
-    
+
     if (ids.isEmpty) {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
       return;
     }
 
     final data = await JamaahController.ambilSemuaJadwalKelas(ids);
-    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
 
     List<Map<String, dynamic>> mendatang = [];
     List<Map<String, dynamic>> riwayat = [];
 
     for (var item in data) {
-      final tgl = item['jadwal'].tanggal ?? '';
-      if (tgl.compareTo(todayStr) >= 0) {
+      final DateTime tgl = item['jadwal'].tanggal;
+      final itemDate = DateTime(tgl.year, tgl.month, tgl.day);
+      if (itemDate.compareTo(todayDate) >= 0) {
         mendatang.add(item);
       } else {
         riwayat.add(item);
@@ -51,9 +57,11 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
     }
 
     // Urutkan mendatang: terdekat dulu (ascending)
-    mendatang.sort((a, b) => (a['jadwal'].tanggal ?? '').compareTo(b['jadwal'].tanggal ?? ''));
+    mendatang.sort(
+      (a, b) => a['jadwal'].tanggal.compareTo(b['jadwal'].tanggal),
+    );
     // Urutkan riwayat: paling baru selesai dulu (descending)
-    riwayat.sort((a, b) => (b['jadwal'].tanggal ?? '').compareTo(a['jadwal'].tanggal ?? ''));
+    riwayat.sort((a, b) => b['jadwal'].tanggal.compareTo(a['jadwal'].tanggal));
 
     if (mounted) {
       setState(() {
@@ -66,29 +74,41 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
 
   Color _warnaStatusJadwal(int status) {
     switch (status) {
-      case 1: return AppColors.warning;
-      case 2: return AppColors.danger;
-      default: return const Color(0xFF4CAF50);
+      case 1:
+        return AppColors.warning;
+      case 2:
+        return AppColors.danger;
+      default:
+        return const Color(0xFF4CAF50);
     }
   }
 
   String _labelStatusJadwal(int status) {
     switch (status) {
-      case 1: return 'Ditunda';
-      case 2: return 'Dibatalkan';
-      default: return 'Sesuai Jadwal';
+      case 1:
+        return 'Ditunda';
+      case 2:
+        return 'Dibatalkan';
+      default:
+        return 'Sesuai Jadwal';
     }
   }
 
   IconData _ikonStatus(int status) {
     switch (status) {
-      case 1: return Icons.pause_circle;
-      case 2: return Icons.cancel;
-      default: return Icons.check_circle;
+      case 1:
+        return Icons.pause_circle;
+      case 2:
+        return Icons.cancel;
+      default:
+        return Icons.check_circle;
     }
   }
 
-  Widget _buildListJadwal(List<Map<String, dynamic>> listData, String emptyMessage) {
+  Widget _buildListJadwal(
+    List<Map<String, dynamic>> listData,
+    String emptyMessage,
+  ) {
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _loadData,
@@ -102,7 +122,7 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                   emptyMessage,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppColors.textSubtitle),
-                )
+                ),
               ],
             )
           : ListView.builder(
@@ -112,12 +132,13 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                 final item = listData[index];
                 final jadwal = item['jadwal'];
                 final kelas = item['kelas'];
-                
-                DateTime tgl;
-                try { tgl = DateTime.parse(jadwal.tanggal); } catch (_) { tgl = DateTime.now(); }
+
+                final DateTime tgl = jadwal.tanggal;
                 final tglStr = DateFormat('dd MMMM yyyy').format(tgl);
-                final isHariIni = DateFormat('yyyy-MM-dd').format(tgl) == DateFormat('yyyy-MM-dd').format(DateTime.now());
-                
+                final isHariIni =
+                    DateFormat('yyyy-MM-dd').format(tgl) ==
+                    DateFormat('yyyy-MM-dd').format(DateTime.now());
+
                 final status = jadwal.statusJadwal;
                 final warna = _warnaStatusJadwal(status);
 
@@ -126,41 +147,84 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isHariIni ? AppColors.primary : AppColors.borderLight, width: isHariIni ? 2 : 1),
+                    border: Border.all(
+                      color: isHariIni
+                          ? AppColors.primary
+                          : AppColors.borderLight,
+                      width: isHariIni ? 2 : 1,
+                    ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: Column(
                     children: [
                       // Header Card
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: isHariIni ? AppColors.primaryLight : AppColors.background,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                          border: const Border(bottom: BorderSide(color: AppColors.borderLight)),
+                          color: isHariIni
+                              ? AppColors.primaryLight
+                              : AppColors.background,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(14),
+                          ),
+                          border: const Border(
+                            bottom: BorderSide(color: AppColors.borderLight),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.class_, size: 16, color: isHariIni ? AppColors.primary : AppColors.textSubtitle),
+                            Icon(
+                              Icons.class_,
+                              size: 16,
+                              color: isHariIni
+                                  ? AppColors.primary
+                                  : AppColors.textSubtitle,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 kelas['nama_kelas'] ?? '-',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: isHariIni ? AppColors.primaryDark : AppColors.textHeading, fontSize: 13),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isHariIni
+                                      ? AppColors.primaryDark
+                                      : AppColors.textHeading,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                             if (isHariIni)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
-                                child: const Text('HARI INI', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  'HARI INI',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                           ],
                         ),
                       ),
-                      
+
                       // Body Card
                       Padding(
                         padding: const EdgeInsets.all(16),
@@ -176,7 +240,11 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                                     color: warna.withOpacity(0.15),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(_ikonStatus(status), color: warna, size: 20),
+                                  child: Icon(
+                                    _ikonStatus(status),
+                                    color: warna,
+                                    size: 20,
+                                  ),
                                 ),
                               ],
                             ),
@@ -187,37 +255,68 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          jadwal.namaPemateri ?? 'Tanpa Pemateri',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textHeading),
+                                          jadwal.namaPemateri ??
+                                              'Tanpa Pemateri',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: AppColors.textHeading,
+                                          ),
                                         ),
                                       ),
                                       Text(
                                         _labelStatusJadwal(status),
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: warna),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: warna,
+                                        ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today, size: 12, color: AppColors.textSubtitle),
+                                      const Icon(
+                                        Icons.calendar_today,
+                                        size: 12,
+                                        color: AppColors.textSubtitle,
+                                      ),
                                       const SizedBox(width: 4),
-                                      Text(tglStr, style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle)),
+                                      Text(
+                                        tglStr,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSubtitle,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Icon(Icons.access_time, size: 12, color: AppColors.textSubtitle),
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: AppColors.textSubtitle,
+                                      ),
                                       const SizedBox(width: 4),
-                                      Text('${jadwal.waktuMulai} - ${jadwal.waktuSelesai}', style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle)),
+                                      Text(
+                                        '${jadwal.waktuMulai} - ${jadwal.waktuSelesai}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSubtitle,
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                  if ((jadwal.materiPembahasan ?? '').isNotEmpty) ...[
+                                  if ((jadwal.materiPembahasan ?? '')
+                                      .isNotEmpty) ...[
                                     const SizedBox(height: 8),
                                     Container(
                                       padding: const EdgeInsets.all(10),
@@ -226,27 +325,41 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.menu_book, size: 14, color: AppColors.primary),
+                                          const Icon(
+                                            Icons.menu_book,
+                                            size: 14,
+                                            color: AppColors.primary,
+                                          ),
                                           const SizedBox(width: 6),
                                           Expanded(
                                             child: Text(
                                               jadwal.materiPembahasan!,
-                                              style: const TextStyle(fontSize: 12, color: AppColors.primaryDark),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.primaryDark,
+                                              ),
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ],
-                                  if (status != 0 && (jadwal.alasanPerubahan ?? '').isNotEmpty) ...[
+                                  if (status != 0 &&
+                                      (jadwal.alasanPerubahan ?? '')
+                                          .isNotEmpty) ...[
                                     const SizedBox(height: 8),
                                     Text(
                                       'Alasan: ${jadwal.alasanPerubahan}',
-                                      style: TextStyle(fontSize: 12, color: warna, fontStyle: FontStyle.italic),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: warna,
+                                        fontStyle: FontStyle.italic,
+                                      ),
                                     ),
-                                  ]
+                                  ],
                                 ],
                               ),
                             ),
@@ -280,12 +393,20 @@ class _TabJadwalJamaahState extends State<TabJadwalJamaah> with SingleTickerProv
         ),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
               : TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildListJadwal(_jadwalMendatang, 'Tidak ada jadwal dalam waktu dekat.'),
-                    _buildListJadwal(_jadwalRiwayat, 'Belum ada riwayat pertemuan.'),
+                    _buildListJadwal(
+                      _jadwalMendatang,
+                      'Tidak ada jadwal dalam waktu dekat.',
+                    ),
+                    _buildListJadwal(
+                      _jadwalRiwayat,
+                      'Belum ada riwayat pertemuan.',
+                    ),
                   ],
                 ),
         ),

@@ -12,16 +12,20 @@ class JamaahController {
       final today = DateTime.now();
       final todayStr = today.toIso8601String().split('T')[0];
       final dataJadwal = await FirebaseService.ambilSemuaJadwal();
-      
+
       // Filter: kelas yang dipilih AND belum dibatalkan (status 2)
       final filtered = dataJadwal
           .where((j) => idKelasDipilih.contains(j['id_kelas']))
           .where((j) => (j['status_jadwal'] as int? ?? 0) != 2)
-          .where((j) => (j['tanggal'] ?? '') >= todayStr) // hanya jadwal mendatang/hari ini
+          .where(
+            (j) => (j['tanggal'] ?? '') >= todayStr,
+          ) // hanya jadwal mendatang/hari ini
           .toList();
 
       // Urutkan terdekat dulu
-      filtered.sort((a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''));
+      filtered.sort(
+        (a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''),
+      );
 
       return filtered.take(3).map((data) => JadwalModel.fromMap(data)).toList();
     } catch (e) {
@@ -43,7 +47,7 @@ class JamaahController {
       final todayJadwal = dataJadwal
           .where((jadwal) => idKelasDipilih.contains(jadwal['id_kelas']))
           .where((jadwal) => jadwal['tanggal'] == todayString)
-          .where((jadwal) => jadwal['status_jadwal'] != 'dibatalkan')
+          .where((jadwal) => (jadwal['status_jadwal'] as int? ?? 0) != 2)
           .toList();
 
       if (todayJadwal.isNotEmpty) {
@@ -116,8 +120,9 @@ class JamaahController {
           try {
             // Firestore Timestamp memiliki method toDate()
             final dt = (raw as dynamic).toDate() as DateTime;
-            tglStr = '${dt.day.toString().padLeft(2,'0')} '
-                '${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][dt.month - 1]} '
+            tglStr =
+                '${dt.day.toString().padLeft(2, '0')} '
+                '${['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][dt.month - 1]} '
                 '${dt.year}';
           } catch (_) {}
         }
