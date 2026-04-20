@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:al_falah_app/controllers/login_controller.dart';
 import 'package:al_falah_app/extensions/navigator.dart';
 import 'package:al_falah_app/view/auth/layar_login.dart';
+import 'package:al_falah_app/view/jamaah/beranda_jamaah.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/view/asisten/tab_beranda_asisten.dart';
 import 'package:al_falah_app/view/asisten/tab_jadwal.dart';
@@ -101,8 +102,15 @@ class _BerandaAsistenState extends State<BerandaAsisten> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.people_outline, color: AppColors.primary),
+            tooltip: 'Lihat Sisi Jamaah',
+            onPressed: () {
+              context.push(const BerandaJamaah());
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout, color: AppColors.danger),
-            tooltip: 'Keluar',
+            tooltip: 'Keluar Akses',
             onPressed: _konfirmasiLogout,
           ),
         ],

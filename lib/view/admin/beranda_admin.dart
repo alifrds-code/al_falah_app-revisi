@@ -7,6 +7,7 @@ import 'package:al_falah_app/view/admin/kelola_jamaah.dart';
 import 'package:al_falah_app/view/admin/kelola_acara.dart';
 import 'package:al_falah_app/view/admin/kelola_pengumuman.dart';
 
+import 'package:al_falah_app/view/jamaah/beranda_jamaah.dart';
 import 'package:al_falah_app/controllers/admin_controller.dart';
 
 // IMPORT GUDANG DESAIN KITA:
@@ -64,6 +65,15 @@ class _BerandaAdminState extends State<BerandaAdmin> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textHeading),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.people_outline, color: AppColors.primary),
+            tooltip: 'Lihat Sisi Jamaah',
+            onPressed: () {
+              context.push(const BerandaJamaah());
+            },
+          ),
+        ],
       ),
       drawer: DrawerAdmin(
         namaUser: widget.namaUser,

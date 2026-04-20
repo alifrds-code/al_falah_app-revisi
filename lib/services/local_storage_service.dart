@@ -17,7 +17,8 @@ class PreferenceHandler {
   static const String _role = 'role'; // 'admin' atau 'asisten'
   static const String _nama = 'nama';
   static const String _email = 'email';
-
+  static const String _isOnboardingDone = 'isOnboardingDone';
+  static const String _kelasJamaah = 'kelasJamaah';
   // CREATE / UPDATE: Simpan Sesi Pas Login Sukses
   Future<void> saveUserSession(bool isLogin, String uid, String role, String nama, String email) async {
     await _preferences.setBool(_isLogin, isLogin);
@@ -57,5 +58,22 @@ class PreferenceHandler {
     await _preferences.remove(_role);
     await _preferences.remove(_nama);
     await _preferences.remove(_email);
+  }
+
+  // ==================== JAMAAH (PUBLIK) ====================
+  // Simpan preferensi pilihan kelas jamaah
+  Future<void> saveKelasJamaah(List<String> idKelas) async {
+    await _preferences.setStringList(_kelasJamaah, idKelas);
+    await _preferences.setBool(_isOnboardingDone, true);
+  }
+
+  // Ambil daftar kelas yang dipilih jamaah
+  Future<List<String>> getKelasJamaah() async {
+    return _preferences.getStringList(_kelasJamaah) ?? [];
+  }
+
+  // Cek apakah orientasi/onboarding pilih kelas sudah pernah dilakukan
+  Future<bool> getIsOnboardingDone() async {
+    return _preferences.getBool(_isOnboardingDone) ?? false;
   }
 }

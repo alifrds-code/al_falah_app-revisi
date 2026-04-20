@@ -6,6 +6,9 @@ import 'package:al_falah_app/view/auth/layar_login.dart';
 import 'package:al_falah_app/utils/app_colors.dart';
 import 'package:al_falah_app/extensions/navigator.dart';
 
+import 'package:al_falah_app/view/jamaah/beranda_jamaah.dart';
+import 'package:al_falah_app/view/jamaah/layar_pilih_kelas.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -28,6 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await pref.init();
 
     final isLogin = await pref.getIsLogin() ?? false;
+    final isOnboardingDone = await pref.getIsOnboardingDone();
 
     if (!mounted) return;
 
@@ -49,10 +53,18 @@ class _SplashScreenState extends State<SplashScreen> {
           emailUser: emailUser,
         ));
       } else {
-        context.pushReplacement(const LayarLogin());
+        if (isOnboardingDone) {
+          context.pushReplacement(const BerandaJamaah());
+        } else {
+          context.pushReplacement(const LayarPilihKelas());
+        }
       }
     } else {
-      context.pushReplacement(const LayarLogin());
+      if (isOnboardingDone) {
+        context.pushReplacement(const BerandaJamaah());
+      } else {
+        context.pushReplacement(const LayarPilihKelas());
+      }
     }
   }
 
