@@ -252,7 +252,7 @@ class _KelolaJamaahState extends State<KelolaJamaah> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Data Jamaah (Real-time)',
+          'Data Jamaah',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,

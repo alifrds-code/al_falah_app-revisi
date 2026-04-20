@@ -97,7 +97,7 @@ class _KelolaAcaraState extends State<KelolaAcara> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Kelola Acara (Real-time)',
+          'Kelola Acara',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,

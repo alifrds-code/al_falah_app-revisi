@@ -251,7 +251,7 @@ class _KelolaAsistenState extends State<KelolaAsisten> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Data Asisten (Real-time)',
+          'Data Asisten',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,

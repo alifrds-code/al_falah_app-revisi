@@ -98,7 +98,7 @@ class _KelolaKelasState extends State<KelolaKelas> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Kelola Kelas (Real-time)',
+          'Kelola Kelas',
           style: TextStyle(
             color: AppColors.textHeading,
             fontWeight: FontWeight.bold,
