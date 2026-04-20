@@ -9,14 +9,21 @@ class JamaahController {
     try {
       if (idKelasDipilih.isEmpty) return [];
 
+      final today = DateTime.now();
+      final todayStr = today.toIso8601String().split('T')[0];
       final dataJadwal = await FirebaseService.ambilSemuaJadwal();
-      final filteredJadwal = dataJadwal
-          .where((jadwal) => idKelasDipilih.contains(jadwal['id_kelas']))
-          .where((jadwal) => jadwal['status_jadwal'] != 'dibatalkan')
-          .take(3)
+      
+      // Filter: kelas yang dipilih AND belum dibatalkan (status 2)
+      final filtered = dataJadwal
+          .where((j) => idKelasDipilih.contains(j['id_kelas']))
+          .where((j) => (j['status_jadwal'] as int? ?? 0) != 2)
+          .where((j) => (j['tanggal'] ?? '') >= todayStr) // hanya jadwal mendatang/hari ini
           .toList();
 
-      return filteredJadwal.map((data) => JadwalModel.fromMap(data)).toList();
+      // Urutkan terdekat dulu
+      filtered.sort((a, b) => (a['tanggal'] ?? '').compareTo(b['tanggal'] ?? ''));
+
+      return filtered.take(3).map((data) => JadwalModel.fromMap(data)).toList();
     } catch (e) {
       print('Error ambil jadwal terbaru: $e');
       return [];
@@ -100,7 +107,22 @@ class JamaahController {
   // ==================== PENGUMUMAN & ACARA ====================
   static Future<List<Map<String, dynamic>>> ambilPengumuman() async {
     try {
-      return await FirebaseService.ambilSemuaPengumuman();
+      final list = await FirebaseService.ambilSemuaPengumuman();
+      // Konvert created_at (Timestamp Firestore) ke string yang readable
+      return list.map((item) {
+        final raw = item['created_at'];
+        String tglStr = '-';
+        if (raw != null) {
+          try {
+            // Firestore Timestamp memiliki method toDate()
+            final dt = (raw as dynamic).toDate() as DateTime;
+            tglStr = '${dt.day.toString().padLeft(2,'0')} '
+                '${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][dt.month - 1]} '
+                '${dt.year}';
+          } catch (_) {}
+        }
+        return {...item, 'tanggal_dibuat': tglStr};
+      }).toList();
     } catch (e) {
       print('Error ambil pengumuman: $e');
       return [];

@@ -201,7 +201,7 @@ class _LayarPilihKelasState extends State<LayarPilihKelas> {
                                     ),
                                   ),
                                   subtitle: Text(
-                                    'Pengajar: ${kelas['nama_ustadz'] ?? '-'}',
+                                    '${kelas['deskripsi']?.isNotEmpty == true ? kelas['deskripsi'] : 'Kelas Terbuka'}',
                                     style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle),
                                   ),
                                   controlAffinity: ListTileControlAffinity.leading,
