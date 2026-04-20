@@ -159,32 +159,28 @@ class _BerandaAdminState extends State<BerandaAdmin> {
                   asisten = snapshot.data!['asisten']!;
                 }
 
-                // Horizontal scrollable stats cards for modern look
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: [
-                      _buildModernStatCard(
-                        title: 'Jamaah',
-                        count: jamaah.toString(),
-                        icon: Icons.people,
-                        color: AppColors.primary,
+                // Clean statistic view instead of cards
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border(
+                        top: BorderSide(color: AppColors.borderLight, width: 1),
+                        bottom: BorderSide(color: AppColors.borderLight, width: 1),
                       ),
-                      _buildModernStatCard(
-                        title: 'Kelas',
-                        count: kelas.toString(),
-                        icon: Icons.class_,
-                        color: AppColors.warning,
-                      ),
-                      _buildModernStatCard(
-                        title: 'Asisten',
-                        count: asisten.toString(),
-                        icon: Icons.person_pin_circle,
-                        color: AppColors.info,
-                      ),
-                    ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatText('Jamaah', jamaah.toString(), AppColors.primary),
+                        Container(height: 40, width: 1, color: AppColors.borderLight),
+                        _buildStatText('Kelas', kelas.toString(), AppColors.warning),
+                        Container(height: 40, width: 1, color: AppColors.borderLight),
+                        _buildStatText('Asisten', asisten.toString(), AppColors.info),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -278,59 +274,31 @@ class _BerandaAdminState extends State<BerandaAdmin> {
     );
   }
 
-  // Komponen Kartu Statistik Modern
-  Widget _buildModernStatCard({
-    required String title,
-    required String count,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+  // Komponen Teks Statistik (bukan card)
+  Widget _buildStatText(String title, String count, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.w900,
+            color: color,
+            height: 1,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 28),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
+            color: AppColors.textSubtitle,
           ),
-          const SizedBox(height: 20),
-          Text(
-            count,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textHeading,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSubtitle,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

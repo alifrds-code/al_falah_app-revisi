@@ -20,7 +20,8 @@ class _TabBerandaJamaahState extends State<TabBerandaJamaah> {
   List<String> _kelasDipilih = [];
   List<Map<String, dynamic>> _semuaKelas = [];
   bool _isLoading = true;
-  List<dynamic> _jadwalTerdekat = [];
+  List<Map<String, dynamic>> _pengumumanTerbaru = [];
+  List<Map<String, dynamic>> _acaraTerbaru = [];
 
   // Realtime clock
   late Timer _timer;
@@ -46,19 +47,16 @@ class _TabBerandaJamaahState extends State<TabBerandaJamaah> {
     await _pref.init();
     final ids = await _pref.getKelasJamaah();
     
-    if (ids.isEmpty) {
-      if (mounted) setState(() { _isLoading = false; });
-      return;
-    }
-
     final semuaKelas = await JamaahController.ambilSemuaKelasUntukPilih();
-    final jadwalDkt = await JamaahController.ambilJadwalTerbaru(ids);
+    final pengumuman = await JamaahController.ambilPengumuman();
+    final acara = await JamaahController.ambilAcara();
 
     if (mounted) {
       setState(() {
         _kelasDipilih = ids;
         _semuaKelas = semuaKelas.where((k) => ids.contains(k['id'])).toList();
-        _jadwalTerdekat = jadwalDkt;
+        _pengumumanTerbaru = pengumuman.take(2).toList();
+        _acaraTerbaru = acara.take(2).toList();
         _isLoading = false;
       });
     }
@@ -72,21 +70,7 @@ class _TabBerandaJamaahState extends State<TabBerandaJamaah> {
     }
   }
 
-  Color _warnaStatusJadwal(int status) {
-    switch (status) {
-      case 1: return AppColors.warning;
-      case 2: return AppColors.danger;
-      default: return const Color(0xFF4CAF50);
-    }
-  }
 
-  String _labelStatusJadwal(int status) {
-    switch (status) {
-      case 1: return 'Ditunda';
-      case 2: return 'Dibatalkan';
-      default: return 'Sesuai Jadwal';
-    }
-  }
 
   String get _jamRealtime {
     return '${_now.hour.toString().padLeft(2, '0')}:'
@@ -247,129 +231,131 @@ class _TabBerandaJamaahState extends State<TabBerandaJamaah> {
               const SizedBox(height: 20),
             ],
 
-            // JADWAL TERDEKAT
+            // INFO & KEGIATAN TERBARU
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'JADWAL MENDATANG',
+                    'INFO & KEGIATAN TERBARU',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1.2),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      // Navigasi ke tab Jadwal
-                    },
-                    child: const Text('Lihat Semua', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
-            if (_kelasDipilih.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderLight),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.class_outlined, color: AppColors.textHint, size: 40),
-                      const SizedBox(height: 12),
-                      const Text('Anda belum memilih kelas yang diikuti.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSubtitle)),
-                      const SizedBox(height: 12),
-                      TextButton(onPressed: _bukaPengaturanKelas, child: const Text('Pilih Kelas Sekarang')),
-                    ],
-                  ),
-                ),
-              )
-            else if (_jadwalTerdekat.isEmpty)
+            if (_pengumumanTerbaru.isEmpty && _acaraTerbaru.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20),
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.event_available, color: AppColors.border, size: 50),
+                      Icon(Icons.campaign_outlined, color: AppColors.border, size: 50),
                       SizedBox(height: 12),
-                      Text('Tidak ada jadwal mendatang.', style: TextStyle(color: AppColors.textSubtitle)),
+                      Text('Belum ada info atau kegiatan terbaru.', style: TextStyle(color: AppColors.textSubtitle)),
                     ],
                   ),
                 ),
               )
-            else
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: _jadwalTerdekat.map((jadwalObj) {
-                    DateTime tgl;
-                    try { tgl = DateTime.parse(jadwalObj.tanggal); } catch (_) { tgl = DateTime.now(); }
-                    final isHariIni = DateFormat('yyyy-MM-dd').format(tgl) == DateFormat('yyyy-MM-dd').format(DateTime.now());
-                    final status = jadwalObj.statusJadwal;
-                    final warna = _warnaStatusJadwal(status);
+            else ...[
+              // List Pengumuman
+              if (_pengumumanTerbaru.isNotEmpty)
+                ..._pengumumanTerbaru.map((item) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12, left: 20, right: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(Icons.campaign, color: AppColors.primary, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item['judul'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textHeading)),
+                              const SizedBox(height: 4),
+                              Text(item['isi'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.textBody)),
+                              const SizedBox(height: 6),
+                              Text(item['tanggal_dibuat'] ?? '-', style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                
+              // List Kegiatan/Acara
+              if (_acaraTerbaru.isNotEmpty)
+                ..._acaraTerbaru.map((item) {
+                  DateTime pDate;
+                  try { pDate = DateTime.parse(item['tanggal'] ?? ''); } catch (_) { pDate = DateTime.now(); }
+                  final dateStr = DateFormat('dd MMM yyyy').format(pDate);
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: isHariIni ? AppColors.primary : AppColors.borderLight, width: isHariIni ? 2 : 1),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4, height: 55,
-                            decoration: BoxDecoration(color: warna, borderRadius: BorderRadius.circular(4)),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12, left: 20, right: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(Icons.event_available, color: AppColors.warning, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item['nama_acara'] ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textHeading)),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.calendar_today, size: 10, color: AppColors.textSubtitle),
+                                  const SizedBox(width: 4),
+                                  Text(dateStr, style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle)),
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.access_time, size: 10, color: AppColors.textSubtitle),
+                                  const SizedBox(width: 4),
+                                  Text(item['jam'] ?? '-', style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle)),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  const Icon(Icons.location_on, size: 10, color: AppColors.danger),
+                                  const SizedBox(width: 4),
+                                  Expanded(child: Text(item['lokasi'] ?? '-', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: AppColors.textSubtitle))),
+                                ],
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      isHariIni ? '● HARI INI' : DateFormat('dd MMM yyyy', 'id').format(tgl),
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isHariIni ? AppColors.primary : AppColors.textSubtitle),
-                                    ),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                                      decoration: BoxDecoration(color: warna.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                                      child: Text(_labelStatusJadwal(status), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: warna)),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  jadwalObj.namaPemateri?.isNotEmpty == true ? jadwalObj.namaPemateri! : 'Ta\'lim',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textHeading),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.access_time, size: 12, color: AppColors.textSubtitle),
-                                    const SizedBox(width: 4),
-                                    Text('${jadwalObj.waktuMulai} - ${jadwalObj.waktuSelesai}', style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+            ],
 
             const SizedBox(height: 24),
           ],
